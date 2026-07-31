@@ -11,7 +11,7 @@
         <div class="form-container">
             <form id="loginForm" action="dashboard.php" method="post">
                 <div class="img-group">
-                    <img src="ama_logo.png" alt="logo">
+                    <img src="images/ama_logo.png" alt="logo">
                 </div>
                 <div class="input-group">
                     <label for="username">Username:</label>

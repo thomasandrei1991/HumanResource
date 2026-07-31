@@ -1,33 +1,170 @@
+/**** Google Fonts Import ****/
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/**** Global Reset & Base Styles ****/
 *{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body{
-    font-family: Arial, Helvetica, sans-serif;
-    background: transparent;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fb;
 }
 
+/**** Dashboard Page Layout ****/
 .dashboard-page {
-    background: transparent;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
-.dashboard-page .container {
+.dashboard-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/**** Sidebar Styles ****/
+.sidebar {
+    width: 270px;
+    background: #45b1cc;
+    color: #1f2937;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-right: 1px solid #e5e7eb;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.brand-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #06b6d4, #0284c7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+}
+
+.brand h2 {
+    font-size: 15px;
+    margin-bottom: 2px;
+    color: #1f2937;
+}
+
+.brand p {
+    font-size: 11px;
+    color: #1f2937;
+}
+
+.sidebar-nav,
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar-nav img{
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.sidebar-section img{
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.sidebar-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #1f2937;
+    margin: 6px 0 2px;
+    padding-left: 10px;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #1f2937;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* pagitan ng icon at text */
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: rgba(255,255,255,0.12);
+    color: white;
+}
+
+.nav-item.logout {
+    margin-top: auto;
+    color: #1f2937;
+}
+
+.nav-item.logout:hover {
+    background: rgba(255,255,255,0.12);
+    color: white;
+}
+
+.nav-item.logout img{
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+/**** Main Content Area ****/
+.dashboard-main {
+    flex: 1;
+    padding: 24px;
+}
+
+.dashboard-container {
+    width: 100%;
+    min-height: calc(100vh - 48px);
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.view-panel {
+    display: none;
+}
+
+.view-panel.active {
     display: block;
-    width: 100%;
-    min-height: 100vh;
 }
 
-.dashboard-page .form-container {
-    background: transparent;
-    width: 100%;
-    min-height: 100vh;
-    padding: 35px 40px;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-/**** Login Form Design *****/
+/**** Login Form Styles ****/
 img{
     width:280px;
     height:auto;
@@ -138,6 +275,7 @@ img{
     gap: 5px;
 }
 
+/**** Modal Styles ****/
 .modal {
     position: fixed;
     inset: 0;
@@ -181,22 +319,7 @@ img{
     font-weight: 600;
 }
 
-
-/**** Dashboard Form Design *****/
-
-.dashboard-container {
-    width: 100%;
-    max-width: none;
-    padding: 35px 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    margin-bottom: 0;
-    padding-bottom: 20px;
-    border-bottom: none;
-}
-
+/**** Dashboard Header Styles ****/
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -204,6 +327,8 @@ img{
     gap: 20px;
     margin-bottom: 30px;
     flex-wrap: wrap;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .dashboard-header .welcome {
@@ -277,7 +402,7 @@ img{
     box-shadow: 0 8px 20px rgba(34,197,94,.35);
 }
 
-/* Dashboard Stats Grid */
+/**** Dashboard Stats Grid ****/
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -358,7 +483,7 @@ img{
     color: #EF4444;
 }
 
-/* Dashboard Content Row */
+/**** Dashboard Content Row ****/
 .dashboard-content {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -372,6 +497,7 @@ img{
     padding: 20px;
 }
 
+/**** Panel Header Styles ****/
 .dashboard-panel .panel-header {
     display: flex;
     justify-content: space-between;
@@ -398,7 +524,114 @@ img{
     text-decoration: underline;
 }
 
-/* Table Styling */
+/**** Department Page Styles ****/
+.department-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    min-height: 100%;
+}
+
+/**** Employee Page Styles ****/
+.employee-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    min-height: 100%;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 30px;
+}
+
+.page-kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #06b6d4;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.page-header h1 {
+    font-size: 26px;
+    color: #0f172a;
+}
+
+.primary-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #06b6d4, #0284c7);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/**** Employee Summary Cards ****/
+.employee-summary{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    border-radius: 18px;
+    padding: 24px;
+    color: white;
+    min-height: 120px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.summary-card.blue {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+}
+
+.summary-card.green {
+    background: linear-gradient(135deg, #34d399, #059669);
+}
+
+.summary-card.purple {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.summary-card h3 {
+    font-size: 13px;
+    margin-bottom: 6px;
+    opacity: 0.95;
+}
+
+.summary-card p {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/**** Employee Directory Panel ****/
+.employee-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+}
+
+.employee-table tbody td {
+    vertical-align: middle;
+}
+
+/**** Table Styles ****/
 .dashboard-table {
     width: 100%;
     border-collapse: collapse;
@@ -437,6 +670,7 @@ img{
     color: #374151;
 }
 
+/**** Employee Name & Avatar Styles ****/
 .dashboard-table tbody td .employee-name {
     display: flex;
     align-items: center;
@@ -476,7 +710,7 @@ img{
     color: #EA580C;
 }
 
-/* Status Badges */
+/**** Status Badge Styles ****/
 .status-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -515,7 +749,7 @@ img{
     color: #166534;
 }
 
-/* Notifications / Activity List */
+/**** Activity List Styles ****/
 .activity-list {
     list-style: none;
 }
@@ -596,4 +830,40 @@ img{
         width: 100%;
         justify-content: space-between;
     }
+}
+@media (max-width: 992px){
+    .employee-summary{
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px){
+    .employee-summary{
+        grid-template-columns: 1fr;
+    }
+}
+
+/***** Attendance *****/
+.summary-card.orange{
+    background: linear-gradient(135deg,#f59e0b,#d97706);
+    color:white;
+}
+
+.summary-card.red{
+    background: linear-gradient(135deg,#ef4444,#dc2626);
+    color:white;
+}
+
+.status-badge.absent{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.status-badge.on-leave{
+    background:#ede9fe;
+    color:#7c3aed;
+}
+.status-badge.pending{
+    background:#fef3c7;
+    color:#b45309;
 }
