@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +12,7 @@
 <body>
     <div class="container">
         <div class="form-container">
-            <form id="loginForm" action="dashboard.php" method="post">
+            <form id="loginForm" action="login_process.php" method="POST">
                 <div class="img-group">
                     <img src="images/ama_logo.png" alt="logo">
                 </div>
@@ -41,7 +44,19 @@
             <button type="button" id="closeModalBtn">Close</button>
         </div>
     </div>
+    <?php if(isset($_SESSION['login_error'])): ?>
 
+    <script>
+        window.onload = function () {
+            document.getElementById("modalMessage").textContent =
+                "<?php echo $_SESSION['login_error']; ?>";
+            document.getElementById("errorModal").classList.remove("hidden");
+        }
+        </script>
+        <?php
+        unset($_SESSION['login_error']);
+        endif;
+    ?>
     <script src="script.js"></script>
 </body>
 </html>

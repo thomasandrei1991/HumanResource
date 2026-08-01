@@ -16,8 +16,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <a href="attendance.php" class="nav-item <?= $currentPage == 'attendance.php' ? 'active' : '' ?>"><img src="images/clock.png" alt=""> Attendance</a>
         <a href="leave_management.php" class="nav-item <?= $currentPage == 'leave_management.php' ? 'active' : '' ?>"><img src="images/calendar-month.png" alt=""> Leave Management</a>
         <a href="payroll.php" class="nav-item <?= $currentPage == 'payroll.php' ? 'active' : '' ?>"><img src="images/currency-peso.png" alt=""> Payroll</a>
-        <a href="#" class="nav-item"><img src="images/user-plus.png" alt=""> Recruitment</a>
-        <a href="#" class="nav-item"><img src="images/chart-line.png" alt=""> Performance</a>
+        <a href="recruitment.php" class="nav-item <?= $currentPage == 'recruitment.php' ? 'active' : '' ?>"><img src="images/user-plus.png" alt=""> Recruitment</a>
+        <a href="performance.php" class="nav-item <?= $currentPage == 'performance.php' ? 'active' : '' ?>"><img src="images/chart-line.png" alt=""> Performance</a>
     </nav>
     <div class="sidebar-section">
         <h3>Reports</h3>
@@ -27,5 +27,5 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <h3>Settings</h3>
         <a href="#" class="nav-item"><img src="images/settings.png" alt=""> Settings</a>
     </div>
-    <a href="login.php" class="nav-item logout"><img src="images/logout.png" alt=""> Logout</a>
+    <a href="logout.php" class="nav-item logout"><img src="images/logout.png" alt=""> Logout</a>
 </aside>
