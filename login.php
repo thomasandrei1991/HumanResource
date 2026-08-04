@@ -58,5 +58,17 @@ session_start();
         endif;
     ?>
     <script src="script.js"></script>
+    <?php if(isset($_SESSION['register_success'])): ?>
+    <script>
+        window.onload = function () {
+            document.getElementById("modalTitle").textContent = "Registration Successful";
+            document.getElementById("modalMessage").textContent = "<?php echo $_SESSION['register_success']; ?>";
+            document.getElementById("errorModal").classList.remove("hidden");
+        }
+        </script>
+        <?php
+        unset($_SESSION['register_success']);
+        endif;
+    ?>
 </body>
 </html>

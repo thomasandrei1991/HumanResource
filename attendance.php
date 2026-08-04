@@ -43,152 +43,103 @@
                     </div>
                     <!-- Attendance Table -->
                     <div class="employee-panel">
-
                         <div class="panel-header">
                             <h2>Today's Attendance</h2>
-
                             <a href="#" class="view-all">
                                 Export →
                             </a>
                         </div>
-
                         <table class="dashboard-table employee-table">
-
                             <thead>
-
                                 <tr>
-
                                     <th>Employee</th>
                                     <th>Department</th>
                                     <th>Date</th>
                                     <th>Time In</th>
                                     <th>Time Out</th>
                                     <th>Status</th>
-
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 <tr>
-
                                     <td>
                                         <div class="employee-name">
                                             <div class="emp-avatar blue-bg">
                                                 JD
                                             </div>
-
                                             John Doe
                                         </div>
                                     </td>
-
                                     <td>IT</td>
-
                                     <td>July 31, 2026</td>
-
                                     <td>8:00 AM</td>
-
                                     <td>5:00 PM</td>
-
                                     <td>
                                         <span class="status-badge present">
                                             Present
                                         </span>
                                     </td>
-
                                 </tr>
-
                                 <tr>
-
                                     <td>
                                         <div class="employee-name">
                                             <div class="emp-avatar green-bg">
                                                 JS
                                             </div>
-
                                             Jane Smith
                                         </div>
                                     </td>
-
                                     <td>HR</td>
-
                                     <td>July 31, 2026</td>
-
                                     <td>8:15 AM</td>
-
                                     <td>5:00 PM</td>
-
                                     <td>
                                         <span class="status-badge late">
                                             Late
                                         </span>
                                     </td>
-
                                 </tr>
-
                                 <tr>
-
                                     <td>
                                         <div class="employee-name">
                                             <div class="emp-avatar orange-bg">
                                                 MR
                                             </div>
-
                                             Mark Reyes
                                         </div>
                                     </td>
-
                                     <td>Finance</td>
-
                                     <td>July 31, 2026</td>
-
                                     <td>--</td>
-
                                     <td>--</td>
-
                                     <td>
                                         <span class="status-badge absent">
                                             Absent
                                         </span>
                                     </td>
-
                                 </tr>
-
                                 <tr>
-
                                     <td>
                                         <div class="employee-name">
                                             <div class="emp-avatar purple-bg">
                                                 KL
                                             </div>
-
                                             Kate Lopez
                                         </div>
                                     </td>
-
                                     <td>Marketing</td>
-
                                     <td>July 31, 2026</td>
-
                                     <td>--</td>
-
                                     <td>--</td>
-
                                     <td>
                                         <span class="status-badge on-leave">
                                             On Leave
                                         </span>
                                     </td>
-
                                 </tr>
-
                             </tbody>
-
                         </table>
-
                     </div>
-
                 </div>
             </div>
         </main>

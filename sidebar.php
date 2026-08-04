@@ -21,11 +21,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </nav>
     <div class="sidebar-section">
         <h3>Reports</h3>
-        <a href="#" class="nav-item"><img src="images/report-analytics.png" alt=""> Reports</a>
+        <a href="reports.php" class="nav-item <?= $currentPage == 'reports.php' ? 'active' : '' ?>"><img src="images/report-analytics.png" alt=""> Reports</a>
     </div>
     <div class="sidebar-section">
         <h3>Settings</h3>
-        <a href="#" class="nav-item"><img src="images/settings.png" alt=""> Settings</a>
+        <a href="settings.php" class="nav-item <?= $currentPage == 'settings.php' ? 'active' : '' ?>"><img src="images/settings.png" alt=""> Settings</a>
     </div>
     <a href="logout.php" class="nav-item logout"><img src="images/logout.png" alt=""> Logout</a>
 </aside>
