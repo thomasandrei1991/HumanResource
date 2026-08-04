@@ -1,0 +1,9 @@
+.employee-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* Page-specific styles for employee management */
