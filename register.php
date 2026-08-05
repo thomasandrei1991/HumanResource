@@ -1,14 +1,14 @@
 <?php
-session_start();
+    session_start();
 
-$modalMessage = '';
-$modalTitle = 'Registration';
+    $modalMessage = '';
+    $modalTitle = 'Registration';
 
-if (isset($_SESSION['register_error'])) {
-    $modalMessage = $_SESSION['register_error'];
-    $modalTitle = 'Registration Failed';
-    unset($_SESSION['register_error']);
-}
+    if (isset($_SESSION['register_error'])) {
+        $modalMessage = $_SESSION['register_error'];
+        $modalTitle = 'Registration Failed';
+        unset($_SESSION['register_error']);
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">

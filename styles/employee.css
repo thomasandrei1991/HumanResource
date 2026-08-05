@@ -4,6 +4,85 @@
     gap: 20px;
     width: 100%;
     min-height: 100%;
+    margin-bottom: 30px;
+}
+
+.employee-form-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+    margin-bottom: 30px;
+}
+
+.employee-form-panel .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.employee-form-panel form {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.employee-form-panel .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.employee-form-panel .input-group label {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.employee-form-panel .input-group input,
+.employee-form-panel .input-group select {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    outline: none;
+    background: #f8fafc;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 14px;
+}
+
+.employee-form-panel .input-group input:focus,
+.employee-form-panel .input-group select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.employee-form-panel .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    grid-column: 1 / -1;
+}
+
+.employee-form-panel .form-actions .primary-btn {
+    min-width: 140px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .employee-form-panel form {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-form-panel .form-actions {
+        justify-content: stretch;
+    }
 }
 
 /* Page-specific styles for employee management */

@@ -18,7 +18,7 @@
                             <p class="page-kicker">People Management</p>
                             <h1>Employees</h1>
                         </div>
-                        <button class="primary-btn">+ Add Employee</button>
+                        <button class="primary-btn" id="addEmployeeBtn">+ Add Employee</button>
                     </div>
                     <div class="employee-summary">
                         <div class="summary-card blue">
@@ -34,6 +34,7 @@
                             <p>17</p>
                         </div>
                     </div>
+                    <?php include 'add_employee.php'; ?>
                     <div class="employee-panel">
                         <div class="panel-header">
                             <h2>Employee Directory</h2>
@@ -101,5 +102,6 @@
             </div>
         </main>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
