@@ -46,9 +46,6 @@
                     <div class="employee-panel">
                         <div class="panel-header">
                             <h2>Today's Attendance</h2>
-                            <a href="#" class="view-all">
-                                Export →
-                            </a>
                         </div>
                         <table class="dashboard-table employee-table">
                             <thead>

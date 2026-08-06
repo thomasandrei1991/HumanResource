@@ -28,11 +28,19 @@ body{
 .dashboard-shell {
     display: flex;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+}
+
+.dashboard-shell.form-open {
+    overflow-y: auto;
 }
 
 .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
     width: 270px;
+    min-height: 100vh;
     background: #45b1cc;
     color: #1f2937;
     padding: 24px 18px;
@@ -40,6 +48,7 @@ body{
     flex-direction: column;
     gap: 12px;
     border-right: 1px solid #e5e7eb;
+    overflow-y: hidden;
 }
 
 .brand {

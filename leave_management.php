@@ -44,7 +44,6 @@
                     <div class="employee-panel">
                         <div class="panel-header">
                             <h2>Leave Requests</h2>
-                            <a href="#" class="view-all">Export →</a>
                         </div>
                         <table class="dashboard-table employee-table">
                             <thead>

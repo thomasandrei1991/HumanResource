@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    // ==========================
     // Show / Hide Password
+    // ==========================
     const showPasswordCheckbox = document.getElementById('showPassword');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
@@ -8,72 +10,235 @@ document.addEventListener('DOMContentLoaded', function () {
     if (showPasswordCheckbox && passwordInput) {
         showPasswordCheckbox.addEventListener('change', function () {
             passwordInput.type = this.checked ? 'text' : 'password';
+
             if (confirmPasswordInput) {
                 confirmPasswordInput.type = this.checked ? 'text' : 'password';
             }
         });
     }
 
-    // Modal
+    // ==========================
+    // Error Modal
+    // ==========================
     const modal = document.getElementById('errorModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
     const closeModalBtn = document.getElementById('closeModalBtn');
+
+    function showModal(title, message) {
+        if (modalTitle) {
+            modalTitle.textContent = title || 'Employee Notice';
+        }
+
+        if (modalMessage) {
+            modalMessage.textContent = message || 'Please complete the form.';
+        }
+
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function hideModal() {
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
 
     if (modal && closeModalBtn) {
 
-        // Close button
         closeModalBtn.addEventListener('click', function () {
-            modal.classList.add('hidden');
+            hideModal();
         });
 
-        // Close when clicking outside the modal content
         modal.addEventListener('click', function (event) {
             if (event.target === modal) {
-                modal.classList.add('hidden');
+                hideModal();
             }
         });
 
     }
 
-    // Add Employee Form
+    // ==========================
+    // Employee Form
+    // ==========================
+
     const addEmployeeBtn = document.getElementById('addEmployeeBtn');
-    const addEmployeeFormPanel = document.getElementById('addEmployeeFormPanel');
+    const employeeFormPanel = document.querySelector('.employee-form-panel');
     const employeeSummary = document.querySelector('.employee-summary');
     const employeePanel = document.querySelector('.employee-panel');
+    const dashboardShell = document.querySelector('.dashboard-shell');
+
     const addEmployeeForm = document.getElementById('addEmployeeForm');
-
-    function showAddEmployeeForm() {
-        if (employeeSummary) employeeSummary.classList.add('hidden');
-        if (employeePanel) employeePanel.classList.add('hidden');
-        if (addEmployeeFormPanel) addEmployeeFormPanel.classList.remove('hidden');
-    }
-
-    function hideAddEmployeeForm() {
-        if (employeeSummary) employeeSummary.classList.remove('hidden');
-        if (employeePanel) employeePanel.classList.remove('hidden');
-        if (addEmployeeFormPanel) addEmployeeFormPanel.classList.add('hidden');
-    }
-
-    if (addEmployeeBtn && addEmployeeFormPanel && employeeSummary && employeePanel) {
-        addEmployeeBtn.addEventListener('click', function () {
-            showAddEmployeeForm();
-        });
-    }
+    const editEmployeeForm = document.getElementById('editEmployeeForm');
 
     const cancelAddEmployeeBtn = document.getElementById('cancelAddEmployeeBtn');
+    const cancelEditEmployeeBtn = document.getElementById('cancelEditEmployeeBtn');
 
-    if (addEmployeeForm) {
-        addEmployeeForm.addEventListener('submit', function (event) {
-            event.preventDefault();
+    const isEditMode = new URLSearchParams(window.location.search).has('edit_id');
+    const shouldShowFormOnLoad = document.body.dataset.showForm === '1';
+    const shouldShowModalOnLoad = document.body.dataset.showModal === '1';
+
+    function showEmployeeForm() {
+
+        if (employeeSummary)
+            employeeSummary.classList.add('hidden');
+
+        if (employeePanel)
+            employeePanel.classList.add('hidden');
+
+        if (employeeFormPanel)
+            employeeFormPanel.classList.remove('hidden');
+
+        if (dashboardShell)
+            dashboardShell.classList.add('form-open');
+    }
+
+    function hideEmployeeForm() {
+
+        if (employeeSummary)
+            employeeSummary.classList.remove('hidden');
+
+        if (employeePanel)
+            employeePanel.classList.remove('hidden');
+
+        if (employeeFormPanel)
+            employeeFormPanel.classList.add('hidden');
+
+        if (dashboardShell)
+            dashboardShell.classList.remove('form-open');
+
+        if (addEmployeeForm)
             addEmployeeForm.reset();
-            hideAddEmployeeForm();
-        });
+
     }
 
+    // Kapag Edit Mode o duplicate error, automatic ipakita ang form
+    if (isEditMode || shouldShowFormOnLoad) {
+        showEmployeeForm();
+    }
+
+    if (shouldShowModalOnLoad) {
+        showModal(
+            document.body.dataset.modalTitle || 'Duplicate Employee ID',
+            document.body.dataset.modalMessage || 'Please complete the form.'
+        );
+    }
+
+    // Add Employee Button
+    if (addEmployeeBtn) {
+
+        addEmployeeBtn.addEventListener('click', function (e) {
+
+            e.preventDefault();
+
+            showEmployeeForm();
+
+        });
+
+    }
+
+    // Cancel Buttons
     if (cancelAddEmployeeBtn) {
+
         cancelAddEmployeeBtn.addEventListener('click', function () {
-            if (addEmployeeForm) addEmployeeForm.reset();
-            hideAddEmployeeForm();
+
+            window.location.href = "employee.php";
+
+        });
+
+    }
+
+    if (cancelEditEmployeeBtn) {
+
+        cancelEditEmployeeBtn.addEventListener('click', function () {
+
+            window.location.href = "employee.php";
+
+        });
+
+    }
+
+
+    const params = new URLSearchParams(window.location.search);
+
+    const employeeModal = document.getElementById("employeeModal");
+    const title = document.getElementById("employeeModalTitle");
+    const message = document.getElementById("employeeModalMessage");
+    const closeBtn = document.getElementById("closeEmployeeModal");
+
+    if(employeeModal){
+
+        if(params.get("error") === "duplicate"){
+
+            title.textContent = "Employee Exists";
+            message.textContent = "Employee ID already exists.";
+            employeeModal.classList.remove("hidden");
+
+        }
+
+        if(params.get("success") === "added"){
+
+            title.textContent = "Success";
+            message.textContent = "Employee added successfully!";
+            employeeModal.classList.remove("hidden");
+
+        }
+
+        closeBtn.addEventListener("click", function(){
+
+            employeeModal.classList.add("hidden");
+
+            window.history.replaceState({}, document.title, "employee.php");
+
+        });
+
+    }
+
+
+    // Delete Modal
+    const deleteButtons = document.querySelectorAll(".employee-delete-btn");
+    const deleteModal = document.getElementById("deleteModal");
+
+    const deleteMessage = document.getElementById("deleteMessage");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+
+    let deleteEmployeeId = null;
+
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener("click", function(){
+            if (deleteModal) {
+                deleteModal.classList.add("hidden");
+            }
         });
     }
 
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", function(){
+            if (deleteEmployeeId) {
+                window.location.href = "delete_employee.php?id=" + deleteEmployeeId;
+            }
+        });
+    }
+
+    deleteButtons.forEach(function(button){
+
+        button.addEventListener("click", function(e){
+            e.preventDefault();
+
+            deleteEmployeeId = this.dataset.id;
+
+            if (deleteMessage) {
+                deleteMessage.textContent =
+                    "Are you sure you want to delete " +
+                    this.dataset.name + "?";
+            }
+
+            if (deleteModal) {
+                deleteModal.classList.remove("hidden");
+            }
+        });
+
+    });
 });

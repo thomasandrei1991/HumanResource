@@ -46,7 +46,6 @@
                     <div class="employee-panel">
                         <div class="panel-header">
                             <h2>Applicant List</h2>
-
                             <a href="#" class="view-all">
                                 Export →
                             </a>

@@ -46,9 +46,6 @@
                     <div class="employee-panel">
                 <div class="panel-header">
                     <h2>Payroll Records</h2>
-                    <a href="#" class="view-all">
-                        Export →
-                    </a>
                 </div>
                 <table class="dashboard-table employee-table">
                     <thead>
