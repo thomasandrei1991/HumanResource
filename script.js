@@ -196,10 +196,80 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
+    // ==========================
+    // Attendance Form
+    // ==========================
+
+    const recordAttendanceBtn = document.getElementById("recordAttendanceBtn");
+
+    const attendanceFormWrapper = document.querySelector(".attendance-form-wrapper");
+
+    const attendanceSummary = document.querySelector(".attendance-container .employee-summary");
+
+    const attendanceTable = document.querySelector(".attendance-container .employee-panel");
+
+    function showAttendanceForm() {
+
+        console.log(attendanceSummary);
+        console.log(attendanceTable);
+        console.log(attendanceFormWrapper);
+
+        if (attendanceSummary) {
+            attendanceSummary.classList.add("hidden");
+        }
+
+        if (attendanceTable) {
+            attendanceTable.classList.add("hidden");
+        }
+
+        if (attendanceFormWrapper) {
+            attendanceFormWrapper.classList.remove("hidden");
+        }
+    }
+
+    function hideAttendanceForm(){
+
+        if(attendanceSummary){
+            attendanceSummary.classList.remove("hidden");
+        }
+
+        if(attendanceTable){
+            attendanceTable.classList.remove("hidden");
+        }
+
+        if(attendanceFormWrapper){
+            attendanceFormWrapper.classList.add("hidden");
+        }
+
+    }
+
+    if(recordAttendanceBtn){
+
+        recordAttendanceBtn.addEventListener("click",function(e){
+
+            e.preventDefault();
+
+            showAttendanceForm();
+
+        });
+
+    }
+
+    const cancelAttendanceBtn=document.getElementById("cancelAttendanceBtn");
+
+    if(cancelAttendanceBtn){
+
+        cancelAttendanceBtn.addEventListener("click",function(){
+
+            hideAttendanceForm();
+
+        });
+
+    }
+
     // Delete Modal
     const deleteButtons = document.querySelectorAll(".employee-delete-btn");
     const deleteModal = document.getElementById("deleteModal");
-
     const deleteMessage = document.getElementById("deleteMessage");
     const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
     const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
@@ -241,4 +311,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     });
+
 });

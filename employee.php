@@ -116,9 +116,12 @@ if (session_status() === PHP_SESSION_NONE) {
                                             </span>
                                         </td>
                                         <td class="actions-cell">
-                                            <a href="employee.php?edit_id=<?php echo $row['id']; ?>" class="edit-btn" data-employee-id="<?php echo $row['id']; ?>">
-                                                ✏️ Edit
-                                            </a>
+                                            <form action="employee.php" method="GET" style="display:inline;">
+                                                <input type="hidden" name="edit_id" value="<?php echo $row['id']; ?>">
+                                                <button type="submit" class="edit-btn" data-employee-id="<?php echo $row['id']; ?>">
+                                                    ✏️ Edit
+                                                </button>
+                                            </form>
                                             <button type="button" class="employee-delete-btn"
                                                 data-id="<?php echo $row['id']; ?>"
                                                 data-name="<?php echo $row['firstname'] . ' ' . $row['lastname']; ?>">

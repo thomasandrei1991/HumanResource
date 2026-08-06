@@ -4,6 +4,18 @@
         header("Location: login.php");
         exit();
     }
+
+    $displayName = $_SESSION['fullname'] ?? $_SESSION['username'] ?? 'User';
+    $displayName = trim($displayName);
+    $nameParts = preg_split('/\s+/', $displayName);
+    $initials = '';
+
+    if (!empty($nameParts)) {
+        $initials = strtoupper(substr($nameParts[0], 0, 1));
+        if (count($nameParts) > 1) {
+            $initials .= strtoupper(substr(end($nameParts), 0, 1));
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,15 +34,15 @@
                 <div class="dashboard-container">
                     <div class="dashboard-header">
                         <div class="welcome">
-                            <h1>Welcome back, John! 👋</h1>
+                            <h1>Welcome back, <?php echo htmlspecialchars($displayName); ?>! 👋</h1>
                             <p>Here's what's happening with your team today.</p>
                         </div>
                         <div class="user-profile">
                             <div class="user-info">
-                                <span>John Doe</span>
+                                <span><?php echo htmlspecialchars($displayName); ?></span>
                                 <span>HR Manager</span>
                             </div>
-                            <div class="avatar">JD</div>
+                            <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
                         </div>
                     </div>
                     <div class="stats-grid">
