@@ -1,21 +1,57 @@
 <?php
-    session_start();
-    if(!isset($_SESSION['user_id'])){
-        header("Location: login.php");
-        exit();
-    }
+session_start();
 
-    $displayName = $_SESSION['fullname'] ?? $_SESSION['username'] ?? 'User';
-    $displayName = trim($displayName);
-    $nameParts = preg_split('/\s+/', $displayName);
-    $initials = '';
+// Block access if the user isn't logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-    if (!empty($nameParts)) {
-        $initials = strtoupper(substr($nameParts[0], 0, 1));
-        if (count($nameParts) > 1) {
-            $initials .= strtoupper(substr(end($nameParts), 0, 1));
-        }
+// ==========================
+// DATABASE CONNECTION
+// ==========================
+require_once 'database.php';
+
+// ==========================
+// USER INFORMATION
+// ==========================
+
+// Prefer full name, fall back to username, then a generic default
+$displayName = $_SESSION['fullname'] ?? $_SESSION['username'] ?? 'User';
+$displayName = trim($displayName);
+
+// Split the name on whitespace so we can build initials from first/last
+$nameParts = preg_split('/\s+/', $displayName);
+
+$initials = '';
+
+if (!empty($nameParts)) {
+    // First letter of the first name part
+    $initials = strtoupper(substr($nameParts[0], 0, 1));
+
+    // If there's more than one part (e.g. "Sarah Martinez"), add the
+    // first letter of the LAST part too, so "Sarah Martinez" -> "SM"
+    if (count($nameParts) > 1) {
+        $initials .= strtoupper(substr(end($nameParts), 0, 1));
     }
+}
+
+// ==========================
+// DASHBOARD EMPLOYEE SUMMARY
+// ==========================
+// Three quick counts used in the summary cards further down the page
+
+$totalEmployees = mysqli_fetch_assoc(
+    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees")
+)['total'];
+
+$activeEmployees = mysqli_fetch_assoc(
+    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'")
+)['total'];
+
+$onLeaveEmployees = mysqli_fetch_assoc(
+    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'")
+)['total'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -29,9 +65,16 @@
 <body class="dashboard-page">
     <div class="dashboard-shell">
         <?php include 'sidebar.php'; ?>
+
         <main class="dashboard-main">
+
+            <!-- ==========================
+                 DASHBOARD VIEW (default active panel)
+                 ========================== -->
             <div class="view-panel active" id="dashboardView">
                 <div class="dashboard-container">
+
+                    <!-- Header: greeting + logged-in user's avatar/name -->
                     <div class="dashboard-header">
                         <div class="welcome">
                             <h1>Welcome back, <?php echo htmlspecialchars($displayName); ?>! 👋</h1>
@@ -41,49 +84,36 @@
                             <div class="user-info">
                                 <span><?php echo htmlspecialchars($displayName); ?></span>
                                 <span>HR Manager</span>
+                                <!-- NOTE: "HR Manager" is hardcoded here, not pulled from $_SESSION['role'] -->
                             </div>
                             <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
                         </div>
                     </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon blue">👥</div>
-                            <div class="stat-info">
-                                <h3>Total Employees</h3>
-                                <div class="stat-number">248</div>
-                                <div class="stat-change positive">↑ 12% this month</div>
-                            </div>
+
+                    <!-- Summary cards: total / active / on-leave counts calculated above -->
+                    <div class="employee-summary">
+                        <div class="summary-card blue">
+                            <h3>Total Staff</h3>
+                            <p><?php echo $totalEmployees; ?></p>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon green">✅</div>
-                            <div class="stat-info">
-                                <h3>Present Today</h3>
-                                <div class="stat-number">214</div>
-                                <div class="stat-change positive">↑ 86% attendance</div>
-                            </div>
+                        <div class="summary-card green">
+                            <h3>Active</h3>
+                            <p><?php echo $activeEmployees; ?></p>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon orange">📋</div>
-                            <div class="stat-info">
-                                <h3>Leave Requests</h3>
-                                <div class="stat-number">12</div>
-                                <div class="stat-change negative">↑ 3 pending</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon purple">⏳</div>
-                            <div class="stat-info">
-                                <h3>On Leave</h3>
-                                <div class="stat-number">18</div>
-                                <div class="stat-change positive">↓ 5 from last week</div>
-                            </div>
+                        <div class="summary-card purple">
+                            <h3>On Leave</h3>
+                            <p><?php echo $onLeaveEmployees; ?></p>
                         </div>
                     </div>
+
                     <div class="dashboard-content">
+
+                        <!-- RECENT ATTENDANCE PANEL -->
                         <div class="dashboard-panel">
                             <div class="panel-header">
                                 <h2>Recent Attendance</h2>
                                 <a href="#" class="view-all">View All →</a>
+                                <!-- NOTE: href="#" — this link doesn't actually go anywhere yet -->
                             </div>
                             <table class="dashboard-table">
                                 <thead>
@@ -95,53 +125,96 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+
+                                <?php
+                                // Pull the 5 most recent attendance records, joined with
+                                // employees so we get name + department in one query
+                                $attendanceQuery = mysqli_query($conn,
+                                    "SELECT
+                                        attendance.attendance_date,
+                                        attendance.time_in,
+                                        attendance.status,
+                                        employees.firstname,
+                                        employees.lastname,
+                                        employees.department
+                                    FROM attendance
+                                    INNER JOIN employees
+                                        ON attendance.employee_id = employees.id
+                                    ORDER BY attendance.attendance_date DESC,
+                                             attendance.time_in DESC
+                                    LIMIT 5"
+                                );
+
+                                if ($attendanceQuery && mysqli_num_rows($attendanceQuery) > 0):
+                                    while ($attendance = mysqli_fetch_assoc($attendanceQuery)):
+
+                                        $firstname = $attendance['firstname'];
+                                        $lastname  = $attendance['lastname'];
+                                        $fullName  = $firstname . " " . $lastname;
+
+                                        // Build initials for the avatar circle, e.g. "SM"
+                                        $initials = strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1));
+                                        // NOTE: this reuses the $initials variable from the logged-in
+                                        // user's initials above — it gets overwritten here on every loop,
+                                        // so don't rely on $initials for the logged-in user after this point
+
+                                        // Attendance status → CSS class, same mapping used on attendance.php
+                                        switch ($attendance['status']) {
+                                            case 'Present':
+                                                $statusClass = 'present';
+                                                break;
+                                            case 'Late':
+                                                $statusClass = 'late';
+                                                break;
+                                            case 'Absent':
+                                                $statusClass = 'absent';
+                                                break;
+                                            case 'On Leave':
+                                                $statusClass = 'on-leave';
+                                                break;
+                                            default:
+                                                $statusClass = 'pending';
+                                        }
+                                ?>
                                     <tr>
                                         <td>
                                             <div class="employee-name">
-                                                <div class="emp-avatar blue-bg">SM</div>
-                                                Sarah Martinez
+                                                <div class="emp-avatar blue-bg">
+                                                    <?php echo htmlspecialchars($initials); ?>
+                                                </div>
+                                                <?php echo htmlspecialchars($fullName); ?>
                                             </div>
                                         </td>
-                                        <td>Engineering</td>
-                                        <td>08:02 AM</td>
-                                        <td><span class="status-badge present">Present</span></td>
-                                    </tr>
-                                    <tr>
+                                        <td><?php echo htmlspecialchars($attendance['department']); ?></td>
+                                        <td><?php echo htmlspecialchars($attendance['time_in'] ?? '--'); ?></td>
                                         <td>
-                                            <div class="employee-name">
-                                                <div class="emp-avatar green-bg">AJ</div>
-                                                Alex Johnson
-                                            </div>
+                                            <span class="status-badge <?php echo $statusClass; ?>">
+                                                <?php echo htmlspecialchars($attendance['status']); ?>
+                                            </span>
                                         </td>
-                                        <td>Marketing</td>
-                                        <td>08:15 AM</td>
-                                        <td><span class="status-badge present">Present</span></td>
                                     </tr>
+                                <?php
+                                    endwhile;
+                                else:
+                                ?>
                                     <tr>
-                                        <td>
-                                            <div class="employee-name">
-                                                <div class="emp-avatar orange-bg">RK</div>
-                                                Rachel Kim
-                                            </div>
+                                        <td colspan="4" style="text-align: center;">
+                                            No attendance records found.
                                         </td>
-                                        <td>Design</td>
-                                        <td>—</td>
-                                        <td><span class="status-badge on-leave">On Leave</span></td>
                                     </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="employee-name">
-                                                <div class="emp-avatar purple-bg">MT</div>
-                                                Marcus Thompson
-                                            </div>
-                                        </td>
-                                        <td>Finance</td>
-                                        <td>09:30 AM</td>
-                                        <td><span class="status-badge late">Late</span></td>
-                                    </tr>
+                                <?php endif; ?>
+
                                 </tbody>
                             </table>
                         </div>
+
+                        <!--
+                            RECENT ACTIVITY PANEL
+                            NOTE: this whole list is static/hardcoded HTML — "Sarah Martinez",
+                            "Rachel Kim", timestamps like "5 min ago" etc. are not coming from
+                            the database. This would need its own activity-log table and query
+                            to become dynamic.
+                        -->
                         <div class="dashboard-panel">
                             <div class="panel-header">
                                 <h2>Recent Activity</h2>
@@ -178,34 +251,49 @@
                                 </li>
                             </ul>
                         </div>
+
                     </div>
                 </div>
             </div>
+
+            <!-- ==========================
+                 EMPLOYEE VIEW (hidden panel — likely toggled via sidebar/JS)
+                 ========================== -->
             <div class="view-panel" id="employeeView">
                 <div class="form-container dashboard-container">
                     <div class="employee-container">
+
                         <div class="page-header">
                             <div>
                                 <p class="page-kicker">People Management</p>
                                 <h1>Employees</h1>
                             </div>
                             <button class="primary-btn">+ Add Employee</button>
+                            <!-- NOTE: plain <button>, no onclick/form action — needs JS (or a link)
+                                 to actually open the add-employee form you built earlier -->
                         </div>
 
-                        <div class="employee-summary">
-                            <div class="summary-card blue">
-                                <h3>Total Staff</h3>
-                                <p>248</p>
-                            </div>
-                            <div class="summary-card green">
-                                <h3>Active</h3>
-                                <p>231</p>
-                            </div>
-                            <div class="summary-card purple">
-                                <h3>On Leave</h3>
-                                <p>17</p>
-                            </div>
+                        <!-- Same summary numbers reused from the dashboard view above -->
+                        <div class="summary-card blue">
+                            <h3>Total Staff</h3>
+                            <p><?php echo $totalEmployees; ?></p>
                         </div>
+                        <div class="summary-card green">
+                            <h3>Active</h3>
+                            <p><?php echo $activeEmployees; ?></p>
+                        </div>
+                        <div class="summary-card purple">
+                            <h3>On Leave</h3>
+                            <p><?php echo $onLeaveEmployees; ?></p>
+                        </div>
+
+                        <!--
+                            EMPLOYEE DIRECTORY TABLE
+                            NOTE: this entire table is static/hardcoded — Sarah Martinez, Alex Johnson,
+                            Rachel Kim, Marcus Thompson are placeholder rows, not a real query against
+                            the employees table. This needs to be replaced with a mysqli_query loop
+                            similar to the attendance table above.
+                        -->
                         <div class="employee-panel">
                             <div class="panel-header">
                                 <h2>Employee Directory</h2>
@@ -221,57 +309,94 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php
+                                    $employeeDirectoryQuery = mysqli_query(
+                                        $conn,
+                                        "SELECT firstname, lastname, department, position, employment_status
+                                        FROM employees
+                                        ORDER BY firstname ASC, lastname ASC"
+                                    );
+
+                                    if (
+                                        $employeeDirectoryQuery &&
+                                        mysqli_num_rows($employeeDirectoryQuery) > 0
+                                    ):
+
+                                        while (
+                                            $employee = mysqli_fetch_assoc($employeeDirectoryQuery)
+                                        ):
+
+                                            $firstname = $employee['firstname'];
+                                            $lastname = $employee['lastname'];
+
+                                            $fullName = $firstname . " " . $lastname;
+
+                                            // Generate initials
+                                            $initials = strtoupper(
+                                                substr($firstname, 0, 1) .
+                                                substr($lastname, 0, 1)
+                                            );
+
+                                            // Employment status → CSS class
+                                            switch ($employee['employment_status']) {
+
+                                                case 'Active':
+                                                    $statusClass = 'present';
+                                                    break;
+
+                                                case 'On Leave':
+                                                    $statusClass = 'on-leave';
+                                                    break;
+
+                                                case 'Inactive':
+                                                    $statusClass = 'absent';
+                                                    break;
+
+                                                default:
+                                                    $statusClass = 'pending';
+                                            }
+                                    ?>
                                     <tr>
                                         <td>
                                             <div class="employee-name">
-                                                <div class="emp-avatar blue-bg">SM</div>
-                                                Sarah Martinez
+                                                <div class="emp-avatar blue-bg">
+                                                    <?php echo htmlspecialchars($initials); ?>
+                                                </div>
+                                                <?php echo htmlspecialchars($fullName); ?>
                                             </div>
                                         </td>
-                                        <td>Engineering</td>
-                                        <td>Software Engineer</td>
-                                        <td><span class="status-badge present">Active</span></td>
-                                    </tr>
-                                    <tr>
                                         <td>
-                                            <div class="employee-name">
-                                                <div class="emp-avatar green-bg">AJ</div>
-                                                Alex Johnson
-                                            </div>
+                                            <?php echo htmlspecialchars($employee['department']); ?>
                                         </td>
-                                        <td>Marketing</td>
-                                        <td>Marketing Lead</td>
-                                        <td><span class="status-badge present">Active</span></td>
-                                    </tr>
-                                    <tr>
                                         <td>
-                                            <div class="employee-name">
-                                                <div class="emp-avatar orange-bg">RK</div>
-                                                Rachel Kim
-                                            </div>
+                                            <?php echo htmlspecialchars($employee['position']); ?>
                                         </td>
-                                        <td>Design</td>
-                                        <td>UI/UX Designer</td>
-                                        <td><span class="status-badge on-leave">On Leave</span></td>
-                                    </tr>
-                                    <tr>
                                         <td>
-                                            <div class="emp-avatar purple-bg">MT</div>
-                                            Marcus Thompson
+                                            <span class="status-badge <?php echo $statusClass; ?>">
+                                                <?php echo htmlspecialchars($employee['employment_status']); ?>
+                                            </span>
                                         </td>
-                                        <td>Finance</td>
-                                        <td>Accountant</td>
-                                        <td><span class="status-badge late">Pending</span></td>
                                     </tr>
+                                <?php
+                                    endwhile;
+                                else:
+                                ?>
+                                    <tr>
+                                        <td colspan="4" style="text-align: center;">
+                                            No employees found.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
+
                     </div>
                 </div>
             </div>
+
         </main>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
-

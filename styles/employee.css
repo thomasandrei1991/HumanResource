@@ -167,23 +167,17 @@
 .edit-btn,
 .delete-btn,
 .employee-delete-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-decoration: none;
-    padding: 7px 12px;
+    border: none;
     border-radius: 999px;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    padding: 7px 10px;
+    font-size: 12px;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .edit-btn {
     background: #eff6ff;
     color: #1d4ed8;
-    border: 1px solid #bfdbfe;
 }
 
 .edit-btn:hover {
@@ -193,10 +187,8 @@
 
 .delete-btn,
 .employee-delete-btn {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #ffffff;
-    border: 1px solid #dc2626;
-    box-shadow: 0 6px 14px rgba(220, 38, 38, 0.18);
+    background: #fef2f2;
+    color: #dc2626;
 }
 
 .delete-btn:hover,

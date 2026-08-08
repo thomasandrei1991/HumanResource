@@ -9,6 +9,15 @@
 </head>
 <body class="dashboard-page">
     <div class="dashboard-shell">
+        <?php
+        session_start();
+            if (!isset($_SESSION['user_id'])) {
+                header("Location: login.php");
+                exit();
+            }
+            $currentPage = basename($_SERVER['PHP_SELF']);
+            $userRole = $_SESSION['role'] ?? '';
+        ?>
         <?php include 'sidebar.php'; ?>
         <main class="dashboard-main">
             <div class="dashboard-container">
@@ -115,5 +124,6 @@
             </div>
         </main>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
