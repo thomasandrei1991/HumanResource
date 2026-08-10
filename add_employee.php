@@ -1,3 +1,88 @@
+<?php
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    require_once 'database.php';
+
+
+    // ==========================
+    // LOGIN CHECK
+    // ==========================
+
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
+
+
+    // ==========================
+    // CURRENT USER
+    // ==========================
+
+    $userId = intval($_SESSION['user_id']);
+    $userRole = $_SESSION['role'] ?? '';
+
+
+    // ==========================
+    // ROLE CHECK
+    // ==========================
+
+    $isAdminOrHR = ($userRole === 'Admin' || $userRole === 'HR');
+
+    if (!$isAdminOrHR) {
+        header("Location: dashboard.php");
+        exit();
+    }
+
+
+    // ==========================
+    // ACTIVE DEPARTMENTS
+    // ==========================
+
+    $departmentQuery = mysqli_query(
+        $conn,
+        "SELECT department_name
+        FROM departments
+        WHERE status = 'Active'
+        ORDER BY department_name ASC"
+    );
+
+
+    // ==========================
+    // EMPLOYEE SUMMARY
+    // ==========================
+
+    $totalEmployees = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total FROM employees"
+        )
+    )['total'];
+
+    $activeEmployees = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total
+            FROM employees
+            WHERE employment_status = 'Active'"
+        )
+    )['total'];
+
+    $onLeaveEmployees = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total
+            FROM employees
+            WHERE employment_status = 'On Leave'"
+        )
+    )['total'];
+
+?>
+
+
+
 <!-- 
     This panel is hidden by default ("hidden" class) — it's meant to be shown via JS 
     when the user clicks an "Add Employee" or "Edit Employee" button elsewhere on the page 
@@ -51,8 +136,40 @@
 
         <div class="input-group">
             <label for="department">Department</label>
-            <!-- Free text input — no dropdown, so department names could end up inconsistent (e.g. "HR" vs "H.R.") -->
-            <input type="text" id="department" name="department" class="inputs" placeholder="Department name" required>
+
+            <select
+                id="department"
+                name="department"
+                class="inputs"
+                required
+            >
+                <option value="" disabled selected>
+                    Select department
+                </option>
+
+                <?php
+                if ($departmentQuery && mysqli_num_rows($departmentQuery) > 0):
+
+                    while ($department = mysqli_fetch_assoc($departmentQuery)):
+                ?>
+
+                    <option value="<?php echo htmlspecialchars($department['department_name']); ?>">
+                        <?php echo htmlspecialchars($department['department_name']); ?>
+                    </option>
+
+                <?php
+                    endwhile;
+
+                else:
+                ?>
+
+                    <option value="" disabled>
+                        No departments available
+                    </option>
+
+                <?php endif; ?>
+
+            </select>
         </div>
 
         <div class="input-group">

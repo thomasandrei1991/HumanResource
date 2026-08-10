@@ -24,8 +24,10 @@ $status = $_POST['status'] ?? 'Active';
 // ==========================
 
 if ($departmentName === '') {
+
     header("Location: departments.php?error=empty");
     exit();
+
 }
 
 
@@ -35,7 +37,9 @@ if ($departmentName === '') {
 
 $checkQuery = mysqli_prepare(
     $conn,
-    "SELECT id FROM departments WHERE department_name = ?"
+    "SELECT id
+     FROM departments
+     WHERE department_name = ?"
 );
 
 mysqli_stmt_bind_param(
@@ -52,6 +56,7 @@ if (mysqli_num_rows($result) > 0) {
 
     header("Location: departments.php?error=duplicate");
     exit();
+
 }
 
 
@@ -62,8 +67,13 @@ if (mysqli_num_rows($result) > 0) {
 $insertQuery = mysqli_prepare(
     $conn,
     "INSERT INTO departments
-    (department_name, department_head, status)
-    VALUES (?, ?, ?)"
+    (
+        department_name,
+        department_head,
+        status
+    )
+    VALUES
+    (?, ?, ?)"
 );
 
 mysqli_stmt_bind_param(
@@ -75,6 +85,10 @@ mysqli_stmt_bind_param(
 );
 
 
+// ==========================
+// EXECUTE
+// ==========================
+
 if (mysqli_stmt_execute($insertQuery)) {
 
     header("Location: departments.php?success=added");
@@ -82,7 +96,11 @@ if (mysqli_stmt_execute($insertQuery)) {
 
 } else {
 
-    header("Location: departments.php?error=failed");
-    exit();
+    die(
+        "Department insert failed: " .
+        mysqli_stmt_error($insertQuery)
+    );
 
 }
+
+?>

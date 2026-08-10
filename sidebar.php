@@ -64,6 +64,13 @@ $userRole = $_SESSION['role'] ?? '';
                 Departments
             </a>
 
+             <a href="department_heads.php"
+                class="nav-item <?php echo $currentPage === 'department_heads.php' ? 'active' : ''; ?>"
+             >
+                <img src="images/building.png" alt="">
+                Department Heads
+            </a>
+
         <?php endif; ?>
 
 

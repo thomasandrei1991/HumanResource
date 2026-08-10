@@ -226,6 +226,7 @@ img {
 }
 
 .inputs{
+    box-sizing: border-box;   /* keeps width/height predictable with padding+border */
     width: 100%;
     height: 44px;
     padding: 0 12px;
@@ -234,6 +235,19 @@ img {
     outline: none;
     transition: .3s;
     font-size: 14px;
+    font-family: inherit;     /* select doesn't always inherit this by default */
+    line-height: 44px;        /* optional: helps vertically center select text in some browsers */
+}
+
+select.inputs {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;...arrow-icon...");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    padding-right: 32px; /* room so text doesn't sit under your custom arrow */
 }
 
 .inputs:focus{

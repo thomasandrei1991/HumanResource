@@ -412,4 +412,91 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     }
+
+    // ==========================
+    // LEAVE FORM — DATE CALCULATION
+    // ==========================
+
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const totalDays = document.getElementById('totalDays');
+
+    function calculateLeaveDays() {
+
+        if (!startDate || !endDate || !totalDays) {
+            return;
+        }
+
+        if (!startDate.value || !endDate.value) {
+            totalDays.value = '';
+            return;
+        }
+
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+
+        if (end < start) {
+            totalDays.value = '';
+            return;
+        }
+
+        const difference = end.getTime() - start.getTime();
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24)) + 1;
+
+        totalDays.value = days;
+    }
+
+    if (startDate) {
+        startDate.addEventListener('change', calculateLeaveDays);
+    }
+
+    if (endDate) {
+        endDate.addEventListener('change', calculateLeaveDays);
+    }
+
+
+    // ==========================
+    // SHOW / HIDE LEAVE FORM
+    // ==========================
+
+    const newLeaveBtn = document.getElementById('newLeaveBtn');
+    const leaveFormPanel = document.getElementById('leaveFormPanel');
+    const cancelLeaveBtn = document.getElementById('cancelLeaveBtn');
+    const leaveForm = document.getElementById('leaveForm');
+
+    const leaveSummary = document.querySelector(
+        '.leave-container .employee-summary'
+    );
+
+    const leavePanel = document.querySelector(
+        '.leave-container .employee-panel'
+    );
+
+    function showLeaveForm() {
+        if (leaveSummary) leaveSummary.classList.add('hidden');
+        if (leavePanel) leavePanel.classList.add('hidden');
+        if (leaveFormPanel) leaveFormPanel.classList.remove('hidden');
+    }
+
+    function hideLeaveForm() {
+        if (leaveSummary) leaveSummary.classList.remove('hidden');
+        if (leavePanel) leavePanel.classList.remove('hidden');
+        if (leaveFormPanel) leaveFormPanel.classList.add('hidden');
+        if (leaveForm) leaveForm.reset();
+    }
+
+    if (newLeaveBtn) {
+        newLeaveBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            showLeaveForm();
+        });
+    }
+
+    if (cancelLeaveBtn) {
+        cancelLeaveBtn.addEventListener('click', function () {
+            hideLeaveForm();
+        });
+    }
+
+
 });

@@ -8,4 +8,39 @@
 .hidden {
     display: none !important;
 }
-/* Page-specific styles for department management */
+
+.edit-btn,
+.delete-btn,
+.employee-delete-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.edit-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.edit-btn:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+.delete-btn,
+.employee-delete-btn {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.delete-btn:hover,
+.employee-delete-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(220, 38, 38, 0.24);
+}
+

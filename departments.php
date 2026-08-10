@@ -23,6 +23,41 @@
 
             require_once 'database.php';
 
+            $departmentModalTitle = '';
+            $departmentModalMessage = '';
+
+            if (isset($_GET['success'])) {
+
+                if ($_GET['success'] === 'added') {
+
+                    $departmentModalTitle = 'Success';
+                    $departmentModalMessage = 'Department added successfully.';
+
+                }
+
+            }
+
+            if (isset($_GET['error'])) {
+
+                if ($_GET['error'] === 'duplicate') {
+
+                    $departmentModalTitle = 'Duplicate Department';
+                    $departmentModalMessage = 'This department already exists.';
+
+                } elseif ($_GET['error'] === 'empty') {
+
+                    $departmentModalTitle = 'Invalid Input';
+                    $departmentModalMessage = 'Please enter a department name.';
+
+                } elseif ($_GET['error'] === 'failed') {
+
+                    $departmentModalTitle = 'Error';
+                    $departmentModalMessage = 'Failed to add department. Please try again.';
+
+                }
+
+            }
+
 
             // ==========================
             // DEPARTMENT SUMMARY
@@ -288,7 +323,7 @@
                                             href="edit_department.php?id=<?php echo $department['id']; ?>"
                                             class="edit-btn"
                                         >
-                                            Edit
+                                            ✏️ Edit
                                         </a>
 
                                         <button
@@ -298,7 +333,7 @@
                                             data-type="department"
                                             data-name="<?php echo htmlspecialchars($departmentName); ?>"
                                         >
-                                            Delete
+                                            🗑️ Delete
                                         </button>
 
                                     </div>
@@ -360,6 +395,80 @@
         </div>
 
     </div>
+    <!-- ==========================
+        DEPARTMENT RESULT MODAL
+    ========================== -->
+
+    <div id="departmentResultModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="panel-header">
+                <h2 id="departmentModalTitle">
+                    Department
+                </h2>
+            </div>
+
+            <p id="departmentModalMessage">
+                Department action completed.
+            </p>
+
+            <div class="form-actions">
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    id="closeDepartmentModalBtn"
+                >
+                    OK
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const modal = document.getElementById('departmentResultModal');
+        const modalTitle = document.getElementById('departmentModalTitle');
+        const modalMessage = document.getElementById('departmentModalMessage');
+        const closeBtn = document.getElementById('closeDepartmentModalBtn');
+
+        const title = <?php echo json_encode($departmentModalTitle); ?>;
+        const message = <?php echo json_encode($departmentModalMessage); ?>;
+
+        if (title && message && modal) {
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            modal.classList.remove('hidden');
+
+        }
+
+        if (closeBtn) {
+
+            closeBtn.addEventListener('click', function () {
+
+                modal.classList.add('hidden');
+
+                // Remove query parameters after closing modal
+                window.history.replaceState(
+                    {},
+                    document.title,
+                    window.location.pathname
+                );
+
+            });
+
+        }
+
+    });
+
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

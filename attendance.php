@@ -2,6 +2,61 @@
     session_start();
     include "database.php";
 
+    // ==========================
+    // ATTENDANCE SUMMARY
+    // ==========================
+
+    // Today's date
+    $today = date('Y-m-d');
+
+    // Total Employees
+    $totalEmployees = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total FROM employees"
+        )
+    )['total'];
+
+
+    // Present Today
+    $presentToday = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total
+            FROM attendance
+            WHERE attendance_date = '$today'
+            AND status = 'Present'"
+        )
+    )['total'];
+
+
+    // Late Today
+    $lateToday = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total
+            FROM attendance
+            WHERE attendance_date = '$today'
+            AND status = 'Late'"
+        )
+    )['total'];
+
+
+    // Absent Today
+    $absentToday = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT COUNT(*) AS total
+            FROM employees e
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM attendance a
+                WHERE a.employee_id = e.id
+                AND a.attendance_date = '$today'
+            )"
+        )
+    )['total'];
+
     /*
     |--------------------------------------------------------------------------
     | LOGIN CHECK
@@ -166,20 +221,23 @@
                         <!-- NOTE: these numbers (214, 12, 8, 14) are hardcoded, not pulled from the database -->
                         <div class="employee-summary">
                             <div class="summary-card blue">
+                                <h3>Total Employees</h3>
+                                <p><?php echo $totalEmployees; ?></p>
+                            </div>
+
+                            <div class="summary-card green">
                                 <h3>Present Today</h3>
-                                <p>214</p>
+                                <p><?php echo $presentToday; ?></p>
                             </div>
+
                             <div class="summary-card orange">
-                                <h3>Late</h3>
-                                <p>12</p>
+                                <h3>Late Today</h3>
+                                <p><?php echo $lateToday; ?></p>
                             </div>
+
                             <div class="summary-card red">
-                                <h3>Absent</h3>
-                                <p>8</p>
-                            </div>
-                            <div class="summary-card purple">
-                                <h3>On Leave</h3>
-                                <p>14</p>
+                                <h3>Absent Today</h3>
+                                <p><?php echo $absentToday; ?></p>
                             </div>
                         </div>
 

@@ -1,66 +1,95 @@
 <?php
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 include "database.php";
 
-/*
-|--------------------------------------------------------------------------
-| LOGIN CHECK
-|--------------------------------------------------------------------------
-*/
+
+// ==========================
+// LOGIN CHECK
+// ==========================
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-/*
-|--------------------------------------------------------------------------
-| CURRENT USER
-|--------------------------------------------------------------------------
-*/
-$userId   = intval($_SESSION['user_id']);
+
+// ==========================
+// CURRENT USER
+// ==========================
+
+$userId = intval($_SESSION['user_id']);
 $userRole = $_SESSION['role'] ?? '';
 
-/*
-|--------------------------------------------------------------------------
-| ROLE CHECK
-|--------------------------------------------------------------------------
-| Admin / HR : can view, add, edit, and delete employees.
-| Employee   : cannot access Employee Management at all.
-*/
+// ==========================
+// GET ACTIVE DEPARTMENTS
+// ==========================
+
+$departmentQuery = mysqli_query(
+    $conn,
+    "SELECT department_name
+     FROM departments
+     WHERE status = 'Active'
+     ORDER BY department_name ASC"
+);
+
+// ==========================
+// ROLE CHECK
+// ==========================
+
 $isAdminOrHR = ($userRole === 'Admin' || $userRole === 'HR');
 
-/*
-|--------------------------------------------------------------------------
-| PAGE ACCESS
-|--------------------------------------------------------------------------
-*/
 if (!$isAdminOrHR) {
     header("Location: dashboard.php");
     exit();
 }
 
-/*
-|--------------------------------------------------------------------------
-| EMPLOYEE SUMMARY COUNTS
-|--------------------------------------------------------------------------
-| FIX: these were referenced in the summary cards below but never
-| defined anywhere in this file, causing "Undefined variable" warnings
-| and blank cards. Added the same COUNT() queries dashboard.php uses.
-*/
+
+// ==========================
+// GET ACTIVE DEPARTMENTS
+// ==========================
+
+$departmentQuery = mysqli_query(
+    $conn,
+    "SELECT department_name
+     FROM departments
+     WHERE status = 'Active'
+     ORDER BY department_name ASC"
+);
+
+
+// ==========================
+// EMPLOYEE SUMMARY COUNTS
+// ==========================
+
 $totalEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees")
+    mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS total FROM employees"
+    )
 )['total'];
 
 $activeEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'")
+    mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM employees
+         WHERE employment_status = 'Active'"
+    )
 )['total'];
 
 $onLeaveEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'")
+    mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM employees
+         WHERE employment_status = 'On Leave'"
+    )
 )['total'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -139,9 +168,9 @@ $onLeaveEmployees = mysqli_fetch_assoc(
                      ADD / EDIT FORM
                 ====================================================== -->
                 <?php
-                $error   = $_GET['error'] ?? '';
-                $success = $_GET['success'] ?? '';
-                $isEditMode = isset($_GET['edit_id']) && !empty($_GET['edit_id']);
+                    $error   = $_GET['error'] ?? '';
+                    $success = $_GET['success'] ?? '';
+                    $isEditMode = isset($_GET['edit_id']) && !empty($_GET['edit_id']);
                 ?>
 
                 <?php if ($isAdminOrHR): ?>
