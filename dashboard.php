@@ -1,57 +1,57 @@
 <?php
-session_start();
+    session_start();
 
-// Block access if the user isn't logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// ==========================
-// DATABASE CONNECTION
-// ==========================
-require_once 'database.php';
-
-// ==========================
-// USER INFORMATION
-// ==========================
-
-// Prefer full name, fall back to username, then a generic default
-$displayName = $_SESSION['fullname'] ?? $_SESSION['username'] ?? 'User';
-$displayName = trim($displayName);
-
-// Split the name on whitespace so we can build initials from first/last
-$nameParts = preg_split('/\s+/', $displayName);
-
-$initials = '';
-
-if (!empty($nameParts)) {
-    // First letter of the first name part
-    $initials = strtoupper(substr($nameParts[0], 0, 1));
-
-    // If there's more than one part (e.g. "Sarah Martinez"), add the
-    // first letter of the LAST part too, so "Sarah Martinez" -> "SM"
-    if (count($nameParts) > 1) {
-        $initials .= strtoupper(substr(end($nameParts), 0, 1));
+    // Block access if the user isn't logged in
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
     }
-}
 
-// ==========================
-// DASHBOARD EMPLOYEE SUMMARY
-// ==========================
-// Three quick counts used in the summary cards further down the page
+    // ==========================
+    // DATABASE CONNECTION
+    // ==========================
+    require_once 'database.php';
 
-$totalEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees")
-)['total'];
+    // ==========================
+    // USER INFORMATION
+    // ==========================
 
-$activeEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'")
-)['total'];
+    // Prefer full name, fall back to username, then a generic default
+    $displayName = $_SESSION['fullname'] ?? $_SESSION['username'] ?? 'User';
+    $displayName = trim($displayName);
 
-$onLeaveEmployees = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'")
-)['total'];
+    // Split the name on whitespace so we can build initials from first/last
+    $nameParts = preg_split('/\s+/', $displayName);
+
+    $initials = '';
+
+    if (!empty($nameParts)) {
+        // First letter of the first name part
+        $initials = strtoupper(substr($nameParts[0], 0, 1));
+
+        // If there's more than one part (e.g. "Sarah Martinez"), add the
+        // first letter of the LAST part too, so "Sarah Martinez" -> "SM"
+        if (count($nameParts) > 1) {
+            $initials .= strtoupper(substr(end($nameParts), 0, 1));
+        }
+    }
+
+    // ==========================
+    // DASHBOARD EMPLOYEE SUMMARY
+    // ==========================
+    // Three quick counts used in the summary cards further down the page
+
+    $totalEmployees = mysqli_fetch_assoc(
+        mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees")
+    )['total'];
+
+    $activeEmployees = mysqli_fetch_assoc(
+        mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'")
+    )['total'];
+
+    $onLeaveEmployees = mysqli_fetch_assoc(
+        mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'")
+    )['total'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

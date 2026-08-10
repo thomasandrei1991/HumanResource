@@ -312,10 +312,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================
 
     if (confirmDeleteBtn) {
+
         confirmDeleteBtn.addEventListener("click", function() {
-        console.log("CONFIRM DELETE");
-        console.log("ID:", deleteId);
-        console.log("TYPE:", deleteType);
+
+            console.log("CONFIRM DELETE");
+            console.log("ID:", deleteId);
+            console.log("TYPE:", deleteType);
 
             if (!deleteId) {
                 console.log("No delete ID found.");
@@ -324,13 +326,90 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // ATTENDANCE DELETE
             if (deleteType === "attendance") {
-                window.location.href = "delete_attendance.php?id=" + encodeURIComponent(deleteId);
+
+                window.location.href =
+                    "delete_attendance.php?id=" +
+                    encodeURIComponent(deleteId);
 
             }
+
+            // DEPARTMENT DELETE
+            else if (deleteType === "department") {
+
+                window.location.href =
+                    "delete_department.php?id=" +
+                    encodeURIComponent(deleteId);
+
+            }
+
             // EMPLOYEE DELETE
             else {
-                window.location.href = "delete_employee.php?id=" + encodeURIComponent(deleteId);
+
+                window.location.href =
+                    "delete_employee.php?id=" +
+                    encodeURIComponent(deleteId);
+
             }
+
         });
+
+    }
+
+
+    // ==========================
+    // DEPARTMENT FORM
+    // ==========================
+
+    const addDepartmentBtn = document.getElementById('addDepartmentBtn');
+    const addDepartmentFormPanel = document.getElementById('addDepartmentFormPanel');
+    const cancelAddDepartmentBtn = document.getElementById('cancelAddDepartmentBtn');
+
+    const departmentSummary = document.querySelector('.department-container .employee-summary');
+    const departmentPanel = document.querySelector('.department-container .employee-panel');
+
+
+    // SHOW DEPARTMENT FORM
+
+    if (addDepartmentBtn) {
+
+        addDepartmentBtn.addEventListener('click', function () {
+
+            if (departmentSummary) {
+                departmentSummary.classList.add('hidden');
+            }
+
+            if (departmentPanel) {
+                departmentPanel.classList.add('hidden');
+            }
+
+            if (addDepartmentFormPanel) {
+                addDepartmentFormPanel.classList.remove('hidden');
+            }
+
+        });
+
+    }
+
+
+    // CANCEL DEPARTMENT FORM
+
+    if (cancelAddDepartmentBtn) {
+
+        cancelAddDepartmentBtn.addEventListener('click', function () {
+
+            if (departmentSummary) {
+                departmentSummary.classList.remove('hidden');
+            }
+
+            if (departmentPanel) {
+                departmentPanel.classList.remove('hidden');
+            }
+
+            if (addDepartmentFormPanel) {
+                addDepartmentFormPanel.classList.add('hidden');
+            }
+
+        });
+
     }
 });
