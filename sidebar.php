@@ -1,8 +1,28 @@
 <?php
 
-$currentPage = basename($_SERVER['PHP_SELF']);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
+$currentPage = basename($_SERVER['PHP_SELF']);
 $userRole = $_SESSION['role'] ?? '';
+
+
+// ==========================
+// DASHBOARD LINK
+// ==========================
+
+$dashboardLink = 'dashboard.php';
+
+if ($userRole === 'Employee') {
+
+    $dashboardLink = 'employee_dashboard.php';
+
+} elseif ($userRole === 'Department Head') {
+
+    $dashboardLink = 'department_head_dashboard.php';
+
+}
 
 ?>
 
@@ -32,128 +52,219 @@ $userRole = $_SESSION['role'] ?? '';
 
     <nav class="sidebar-nav">
 
+
+        <!-- ========================= -->
         <!-- DASHBOARD -->
-         <?php
+        <!-- ========================= -->
 
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-
-            $userRole = $_SESSION['role'] ?? '';
-
-            $dashboardLink = 'dashboard.php';
-
-            if ($userRole === 'Employee') {
-
-                $dashboardLink = 'employee_dashboard.php';
-
-            } elseif ($userRole === 'Department Head') {
-
-                $dashboardLink = 'department_head_dashboard.php';
-
-            }
-
-        ?>
-
-       <a
+        <a
             href="<?php echo htmlspecialchars($dashboardLink); ?>"
-            class="nav-item <?php echo ($currentPage === basename($dashboardLink)) ? 'active' : ''; ?>"
+            class="nav-item <?php
+                echo $currentPage === basename($dashboardLink)
+                    ? 'active'
+                    : '';
+            ?>"
         >
+
             <img
                 src="images/chart-bar-popular.png"
                 alt="Dashboard"
             >
+
             <span>Dashboard</span>
+
         </a>
 
 
+        <!-- ========================= -->
         <!-- ADMIN / HR -->
+        <!-- ========================= -->
 
         <?php if ($userRole === 'Admin' || $userRole === 'HR'): ?>
 
+
+            <!-- EMPLOYEES -->
+
             <a
                 href="employee.php"
-                class="nav-item <?php echo $currentPage === 'employee.php' ? 'active' : ''; ?>"
+                class="nav-item <?php
+                    echo $currentPage === 'employee.php'
+                        ? 'active'
+                        : '';
+                ?>"
             >
-                <img src="images/users.png" alt="">
-                Employee
+
+                <img
+                    src="images/users.png"
+                    alt="Employees"
+                >
+
+                <span>Employee</span>
+
             </a>
 
+
+            <!-- DEPARTMENTS -->
 
             <a
                 href="departments.php"
-                class="nav-item <?php echo $currentPage === 'departments.php' ? 'active' : ''; ?>"
+                class="nav-item <?php
+                    echo $currentPage === 'departments.php'
+                        ? 'active'
+                        : '';
+                ?>"
             >
-                <img src="images/building.png" alt="">
-                Departments
+
+                <img
+                    src="images/building.png"
+                    alt="Departments"
+                >
+
+                <span>Departments</span>
+
             </a>
 
-             <a href="department_heads.php"
-                class="nav-item <?php echo $currentPage === 'department_heads.php' ? 'active' : ''; ?>"
-             >
-                <img src="images/building.png" alt="">
-                Department Heads
+
+            <!-- DEPARTMENT HEADS -->
+
+            <a
+                href="department_heads.php"
+                class="nav-item <?php
+                    echo $currentPage === 'department_heads.php'
+                        ? 'active'
+                        : '';
+                ?>"
+            >
+
+                <img
+                    src="images/building.png"
+                    alt="Department Heads"
+                >
+
+                <span>Department Heads</span>
+
             </a>
+
 
         <?php endif; ?>
 
 
+        <!-- ========================= -->
         <!-- ATTENDANCE -->
+        <!-- ========================= -->
 
         <a
             href="attendance.php"
-            class="nav-item <?php echo $currentPage === 'attendance.php' ? 'active' : ''; ?>"
+            class="nav-item <?php
+                echo $currentPage === 'attendance.php'
+                    ? 'active'
+                    : '';
+            ?>"
         >
-            <img src="images/clock.png" alt="">
-            Attendance
+
+            <img
+                src="images/clock.png"
+                alt="Attendance"
+            >
+
+            <span>Attendance</span>
+
         </a>
 
 
+        <!-- ========================= -->
         <!-- LEAVE MANAGEMENT -->
+        <!-- ========================= -->
 
         <a
             href="leave_management.php"
-            class="nav-item <?php echo $currentPage === 'leave_management.php' ? 'active' : ''; ?>"
+            class="nav-item <?php
+                echo $currentPage === 'leave_management.php'
+                    ? 'active'
+                    : '';
+            ?>"
         >
-            <img src="images/calendar-month.png" alt="">
-            Leave Management
+
+            <img
+                src="images/calendar-month.png"
+                alt="Leave Management"
+            >
+
+            <span>Leave Management</span>
+
         </a>
 
 
+        <!-- ========================= -->
         <!-- PAYROLL -->
+        <!-- ========================= -->
 
         <a
             href="payroll.php"
-            class="nav-item <?php echo $currentPage === 'payroll.php' ? 'active' : ''; ?>"
+            class="nav-item <?php
+                echo $currentPage === 'payroll.php'
+                    ? 'active'
+                    : '';
+            ?>"
         >
-            <img src="images/currency-peso.png" alt="">
-            Payroll
+
+            <img
+                src="images/currency-peso.png"
+                alt="Payroll"
+            >
+
+            <span>Payroll</span>
+
         </a>
 
 
-        <!-- ADMIN / HR -->
+        <!-- ========================= -->
+        <!-- RECRUITMENT -->
+        <!-- ========================= -->
 
         <?php if ($userRole === 'Admin' || $userRole === 'HR'): ?>
 
             <a
                 href="recruitment.php"
-                class="nav-item <?php echo $currentPage === 'recruitment.php' ? 'active' : ''; ?>"
+                class="nav-item <?php
+                    echo $currentPage === 'recruitment.php'
+                        ? 'active'
+                        : '';
+                ?>"
             >
-                <img src="images/user-plus.png" alt="">
-                Recruitment
+
+                <img
+                    src="images/user-plus.png"
+                    alt="Recruitment"
+                >
+
+                <span>Recruitment</span>
+
             </a>
 
         <?php endif; ?>
 
 
+        <!-- ========================= -->
         <!-- PERFORMANCE -->
+        <!-- ========================= -->
 
         <a
             href="performance.php"
-            class="nav-item <?php echo $currentPage === 'performance.php' ? 'active' : ''; ?>"
+            class="nav-item <?php
+                echo $currentPage === 'performance.php'
+                    ? 'active'
+                    : '';
+            ?>"
         >
-            <img src="images/chart-line.png" alt="">
-            Performance
+
+            <img
+                src="images/chart-line.png"
+                alt="Performance"
+            >
+
+            <span>Performance</span>
+
         </a>
 
     </nav>
@@ -171,10 +282,20 @@ $userRole = $_SESSION['role'] ?? '';
 
             <a
                 href="reports.php"
-                class="nav-item <?php echo $currentPage === 'reports.php' ? 'active' : ''; ?>"
+                class="nav-item <?php
+                    echo $currentPage === 'reports.php'
+                        ? 'active'
+                        : '';
+                ?>"
             >
-                <img src="images/report-analytics.png" alt="">
-                Reports
+
+                <img
+                    src="images/report-analytics.png"
+                    alt="Reports"
+                >
+
+                <span>Reports</span>
+
             </a>
 
         </div>
@@ -194,10 +315,20 @@ $userRole = $_SESSION['role'] ?? '';
 
             <a
                 href="settings.php"
-                class="nav-item <?php echo $currentPage === 'settings.php' ? 'active' : ''; ?>"
+                class="nav-item <?php
+                    echo $currentPage === 'settings.php'
+                        ? 'active'
+                        : '';
+                ?>"
             >
-                <img src="images/settings.png" alt="">
-                Settings
+
+                <img
+                    src="images/settings.png"
+                    alt="Settings"
+                >
+
+                <span>Settings</span>
+
             </a>
 
         </div>
@@ -213,8 +344,14 @@ $userRole = $_SESSION['role'] ?? '';
         href="logout.php"
         class="nav-item logout"
     >
-        <img src="images/logout.png" alt="">
-        Logout
+
+        <img
+            src="images/logout.png"
+            alt="Logout"
+        >
+
+        <span>Logout</span>
+
     </a>
 
 </aside>

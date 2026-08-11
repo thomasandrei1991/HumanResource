@@ -1,159 +1,441 @@
 <?php
-    session_start();
-    include "database.php";
 
-    // ==========================
-    // ATTENDANCE SUMMARY
-    // ==========================
+session_start();
+include "database.php";
 
-    // Today's date
-    $today = date('Y-m-d');
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
 
-    // Total Employees
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+
+// ==========================================================
+// CURRENT USER
+// ==========================================================
+
+$userId = intval($_SESSION['user_id']);
+$userRole = $_SESSION['role'] ?? '';
+
+
+// ==========================================================
+// ROLE CHECK
+// ==========================================================
+
+$isAdminOrHR = (
+    $userRole === 'Admin' ||
+    $userRole === 'HR'
+);
+
+$isDepartmentHead = (
+    $userRole === 'Department Head'
+);
+
+$isEmployee = (
+    $userRole === 'Employee'
+);
+
+
+// ==========================================================
+// GET DEPARTMENT HEAD'S DEPARTMENT
+// ==========================================================
+
+$headDepartment = '';
+
+if ($isDepartmentHead) {
+
+    $headName = $_SESSION['fullname'] ?? '';
+
+    $departmentQuery = mysqli_prepare(
+        $conn,
+        "SELECT department_name
+         FROM departments
+         WHERE department_head = ?
+         AND LOWER(status) = 'active'
+         LIMIT 1"
+    );
+
+    mysqli_stmt_bind_param(
+        $departmentQuery,
+        "s",
+        $headName
+    );
+
+    mysqli_stmt_execute($departmentQuery);
+
+    $departmentResult = mysqli_stmt_get_result(
+        $departmentQuery
+    );
+
+    if (mysqli_num_rows($departmentResult) > 0) {
+
+        $departmentData = mysqli_fetch_assoc(
+            $departmentResult
+        );
+
+        $headDepartment =
+            $departmentData['department_name'] ?? '';
+    }
+}
+
+
+// ==========================================================
+// TODAY'S DATE
+// ==========================================================
+
+$today = date('Y-m-d');
+
+
+// ==========================================================
+// DEFAULT SUMMARY VALUES
+// ==========================================================
+
+$totalEmployees = 0;
+$presentToday = 0;
+$lateToday = 0;
+$absentToday = 0;
+
+
+// ==========================================================
+// ATTENDANCE SUMMARY
+// ==========================================================
+
+if ($isAdminOrHR) {
+
+    // ======================================================
+    // ADMIN / HR
+    // ALL EMPLOYEES
+    // ======================================================
+
     $totalEmployees = mysqli_fetch_assoc(
         mysqli_query(
             $conn,
-            "SELECT COUNT(*) AS total FROM employees"
+            "SELECT COUNT(*) AS total
+             FROM employees"
         )
     )['total'];
 
 
-    // Present Today
     $presentToday = mysqli_fetch_assoc(
         mysqli_query(
             $conn,
             "SELECT COUNT(*) AS total
-            FROM attendance
-            WHERE attendance_date = '$today'
-            AND status = 'Present'"
+             FROM attendance
+             WHERE attendance_date = '$today'
+             AND status = 'Present'"
         )
     )['total'];
 
 
-    // Late Today
     $lateToday = mysqli_fetch_assoc(
         mysqli_query(
             $conn,
             "SELECT COUNT(*) AS total
-            FROM attendance
-            WHERE attendance_date = '$today'
-            AND status = 'Late'"
+             FROM attendance
+             WHERE attendance_date = '$today'
+             AND status = 'Late'"
         )
     )['total'];
 
 
-    // Absent Today
     $absentToday = mysqli_fetch_assoc(
         mysqli_query(
             $conn,
             "SELECT COUNT(*) AS total
-            FROM employees e
-            WHERE NOT EXISTS (
-                SELECT 1
-                FROM attendance a
-                WHERE a.employee_id = e.id
-                AND a.attendance_date = '$today'
-            )"
+             FROM employees e
+             WHERE NOT EXISTS (
+                 SELECT 1
+                 FROM attendance a
+                 WHERE a.employee_id = e.id
+                 AND a.attendance_date = '$today'
+             )"
         )
     )['total'];
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN CHECK
-    |--------------------------------------------------------------------------
-    | Kick anyone who isn't logged in back to the login page before rendering
-    | anything else on this page.
-    */
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
-        exit();
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET CURRENT USER
-    |--------------------------------------------------------------------------
-    */
-    $userId   = intval($_SESSION['user_id']);          // cast to int for safe use in SQL below
-    $userRole = $_SESSION['role'] ?? '';                 // default to '' if role isn't set
+} elseif ($isDepartmentHead) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | ROLE CHECK
-    |--------------------------------------------------------------------------
-    | Admin and HR : can see all attendance records, edit, and delete.
-    | Employee     : can only see their own attendance; no edit or delete.
-    */
-    $isAdminOrHR = ($userRole === 'Admin' || $userRole === 'HR');
+    // ======================================================
+    // DEPARTMENT HEAD
+    // OWN DEPARTMENT ONLY
+    // ======================================================
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM MODE
-    |--------------------------------------------------------------------------
-    | Decide whether to show the add/edit attendance form instead of the
-    | normal table + summary view. Only Admin/HR can trigger form mode.
-    */
+    // TOTAL EMPLOYEES
+
+    $countQuery = mysqli_prepare(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM employees
+         WHERE LOWER(department) = LOWER(?)"
+    );
+
+    mysqli_stmt_bind_param(
+        $countQuery,
+        "s",
+        $headDepartment
+    );
+
+    mysqli_stmt_execute($countQuery);
+
+    $countResult = mysqli_stmt_get_result(
+        $countQuery
+    );
+
+    $countData = mysqli_fetch_assoc(
+        $countResult
+    );
+
+    $totalEmployees = $countData['total'] ?? 0;
 
 
-    $showForm = false;
-    // "+ Record Attendance" button links here with ?show_form=1
-    if (isset($_GET['show_form']) && $_GET['show_form'] === '1' && $isAdminOrHR) {
-        $showForm = true;
-    }
-    // The "Edit" button on a table row links here with ?edit_id=123
-    if (isset($_GET['edit_id']) && $isAdminOrHR) {
-        $showForm = true;
-    }
+    // ======================================================
+    // PRESENT TODAY
+    // ======================================================
+
+    $presentQuery = mysqli_prepare(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM attendance a
+         INNER JOIN employees e
+             ON a.employee_id = e.id
+         WHERE LOWER(e.department) = LOWER(?)
+         AND a.attendance_date = ?
+         AND a.status = 'Present'"
+    );
+
+    mysqli_stmt_bind_param(
+        $presentQuery,
+        "ss",
+        $headDepartment,
+        $today
+    );
+
+    mysqli_stmt_execute($presentQuery);
+
+    $presentResult = mysqli_stmt_get_result(
+        $presentQuery
+    );
+
+    $presentData = mysqli_fetch_assoc(
+        $presentResult
+    );
+
+    $presentToday = $presentData['total'] ?? 0;
+
+
+    // ======================================================
+    // LATE TODAY
+    // ======================================================
+
+    $lateQuery = mysqli_prepare(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM attendance a
+         INNER JOIN employees e
+             ON a.employee_id = e.id
+         WHERE LOWER(e.department) = LOWER(?)
+         AND a.attendance_date = ?
+         AND a.status = 'Late'"
+    );
+
+    mysqli_stmt_bind_param(
+        $lateQuery,
+        "ss",
+        $headDepartment,
+        $today
+    );
+
+    mysqli_stmt_execute($lateQuery);
+
+    $lateResult = mysqli_stmt_get_result(
+        $lateQuery
+    );
+
+    $lateData = mysqli_fetch_assoc(
+        $lateResult
+    );
+
+    $lateToday = $lateData['total'] ?? 0;
+
+
+    // ======================================================
+    // ABSENT TODAY
+    // ======================================================
+
+    $absentQuery = mysqli_prepare(
+        $conn,
+        "SELECT COUNT(*) AS total
+         FROM employees e
+         WHERE LOWER(e.department) = LOWER(?)
+         AND NOT EXISTS (
+             SELECT 1
+             FROM attendance a
+             WHERE a.employee_id = e.id
+             AND a.attendance_date = ?
+         )"
+    );
+
+    mysqli_stmt_bind_param(
+        $absentQuery,
+        "ss",
+        $headDepartment,
+        $today
+    );
+
+    mysqli_stmt_execute($absentQuery);
+
+    $absentResult = mysqli_stmt_get_result(
+        $absentQuery
+    );
+
+    $absentData = mysqli_fetch_assoc(
+        $absentResult
+    );
+
+    $absentToday = $absentData['total'] ?? 0;
+
+}
+
+
+// ==========================================================
+// FORM MODE
+// ==========================================================
+
+$showForm = false;
+
+
+// + Record Attendance
+if (
+    isset($_GET['show_form']) &&
+    $_GET['show_form'] === '1' &&
+    $isAdminOrHR
+) {
+    $showForm = true;
+}
+
+
+// Edit Attendance
+if (
+    isset($_GET['edit_id']) &&
+    $isAdminOrHR
+) {
+    $showForm = true;
+}
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/common.css">
-    <link rel="stylesheet" href="styles/attendance.css">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="stylesheet"
+        href="styles/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="styles/attendance.css"
+    >
+
     <title>Attendance | HR Dashboard</title>
+
 </head>
 
-<!--
-    data-show-form: exposes to JS whether there's a pending attendance error,
-    presumably so a script can auto-reopen the form panel after a failed submit.
-    Note: this only checks 'attendance_error', not 'attendance_success', so a
-    successful submit won't re-trigger this attribute (which is likely fine,
-    since on success you'd want the form to close, not reopen).
--->
 
-<body class="dashboard-page" data-show-form="<?php echo isset($_SESSION['attendance_error']) ? '1' : '0'; ?>">
+<body
+    class="dashboard-page"
+    data-show-form="<?php
+        echo isset($_SESSION['attendance_error'])
+            ? '1'
+            : '0';
+    ?>"
+>
+
 <div class="dashboard-shell">
+
     <?php include 'sidebar.php'; ?>
+
+
     <main class="dashboard-main">
+
         <div class="dashboard-container">
+
             <div class="attendance-container">
+
                 <div class="attendance-content">
+
+
                     <?php
-                    
-                    // Show a one-time success message, then clear it so it
-                    // doesn't reappear on the next page load
+
+                    // ==================================================
+                    // SUCCESS MESSAGE
+                    // ==================================================
+
                     if (isset($_SESSION['attendance_success'])) {
-                        echo '<div class="success-message">' . htmlspecialchars($_SESSION['attendance_success']) . '</div>';
-                        unset($_SESSION['attendance_success']);
+
+                        echo '<div class="success-message">'
+                            . htmlspecialchars(
+                                $_SESSION['attendance_success']
+                            )
+                            . '</div>';
+
+                        unset(
+                            $_SESSION['attendance_success']
+                        );
                     }
 
-                    // Same pattern for a one-time error message
+
+                    // ==================================================
+                    // ERROR MESSAGE
+                    // ==================================================
+
                     if (isset($_SESSION['attendance_error'])) {
-                        echo '<div class="error-message">' . htmlspecialchars($_SESSION['attendance_error']) . '</div>';
-                        unset($_SESSION['attendance_error']);
+
+                        echo '<div class="error-message">'
+                            . htmlspecialchars(
+                                $_SESSION['attendance_error']
+                            )
+                            . '</div>';
+
+                        unset(
+                            $_SESSION['attendance_error']
+                        );
                     }
+
                     ?>
 
+
                     <!-- PAGE HEADER -->
+
                     <div class="page-header">
+
                         <div>
-                            <p class="page-kicker">Time & Attendance</p>
-                            <h1>Attendance</h1>
+
+                            <p class="page-kicker">
+                                Time & Attendance
+                            </p>
+
+                            <h1>
+                                Attendance
+                            </h1>
+
                         </div>
+
+
                         <?php if ($isAdminOrHR): ?>
+
                             <a
                                 href="attendance.php?show_form=1"
                                 class="primary-btn"
@@ -161,259 +443,729 @@
                             >
                                 + Record Attendance
                             </a>
+
                         <?php endif; ?>
+
                     </div>
 
+
                     <!-- FORM -->
+
                     <?php if ($showForm): ?>
 
                         <div class="attendance-form-wrapper">
+
                             <?php
-                            $isEditMode = isset($_GET['edit_id']);
+
+                            $isEditMode =
+                                isset($_GET['edit_id']);
+
 
                             if ($isEditMode) {
-                                /*
-                                |--------------------------------------------------------------------------
-                                | GET ATTENDANCE RECORD (edit mode)
-                                |--------------------------------------------------------------------------
-                                */
-                                $editId = intval($_GET['edit_id']); // cast to int — prevents SQL injection here since it can only be numeric
 
-                                $attendanceSql = "SELECT * FROM attendance WHERE id = $editId";
-                                $attendanceResult = mysqli_query($conn, $attendanceSql);
+                                // ==================================================
+                                // GET ATTENDANCE RECORD
+                                // ==================================================
 
-                                if (!$attendanceResult || mysqli_num_rows($attendanceResult) === 0) {
-                                    die("Attendance record not found.");
+                                $editId =
+                                    intval($_GET['edit_id']);
+
+
+                                $attendanceSql =
+                                    "SELECT *
+                                     FROM attendance
+                                     WHERE id = $editId";
+
+
+                                $attendanceResult =
+                                    mysqli_query(
+                                        $conn,
+                                        $attendanceSql
+                                    );
+
+
+                                if (
+                                    !$attendanceResult ||
+                                    mysqli_num_rows(
+                                        $attendanceResult
+                                    ) === 0
+                                ) {
+
+                                    die(
+                                        "Attendance record not found."
+                                    );
+
                                 }
 
-                                $attendance = mysqli_fetch_assoc($attendanceResult);
 
-                                /*
-                                |--------------------------------------------------------------------------
-                                | GET EMPLOYEES (used by edit_attendance.php's dropdown)
-                                |--------------------------------------------------------------------------
-                                */
+                                $attendance =
+                                    mysqli_fetch_assoc(
+                                        $attendanceResult
+                                    );
+
+
+                                // ==================================================
+                                // GET EMPLOYEES
+                                // ==================================================
+
                                 $employeesSql = "
-                                    SELECT id, firstname, lastname
+                                    SELECT
+                                        id,
+                                        firstname,
+                                        lastname
                                     FROM employees
-                                    ORDER BY firstname ASC, lastname ASC
+                                    ORDER BY
+                                        firstname ASC,
+                                        lastname ASC
                                 ";
-                                $employees = mysqli_query($conn, $employeesSql);
+
+
+                                $employees =
+                                    mysqli_query(
+                                        $conn,
+                                        $employeesSql
+                                    );
+
 
                                 if (!$employees) {
-                                    die("Employee query failed: " . mysqli_error($conn));
+
+                                    die(
+                                        "Employee query failed: "
+                                        . mysqli_error($conn)
+                                    );
+
                                 }
 
-                                // Hand off to the edit form partial, which has access to
-                                // $attendance and $employees from this scope
+
                                 include "edit_attendance.php";
 
+
                             } else {
-                                // Add mode — no record to load, just show the blank form
+
+                                // ==================================================
+                                // ADD ATTENDANCE
+                                // ==================================================
+
                                 include "add_attendance.php";
+
                             }
+
                             ?>
+
                         </div>
+
 
                     <?php else: ?>
 
+
                         <!-- SUMMARY CARDS -->
-                        <!-- NOTE: these numbers (214, 12, 8, 14) are hardcoded, not pulled from the database -->
+
                         <div class="employee-summary">
+
                             <div class="summary-card blue">
-                                <h3>Total Employees</h3>
-                                <p><?php echo $totalEmployees; ?></p>
+
+                                <h3>
+                                    Total Employees
+                                </h3>
+
+                                <p>
+                                    <?php
+                                    echo $totalEmployees;
+                                    ?>
+                                </p>
+
                             </div>
+
 
                             <div class="summary-card green">
-                                <h3>Present Today</h3>
-                                <p><?php echo $presentToday; ?></p>
+
+                                <h3>
+                                    Present Today
+                                </h3>
+
+                                <p>
+                                    <?php
+                                    echo $presentToday;
+                                    ?>
+                                </p>
+
                             </div>
+
 
                             <div class="summary-card orange">
-                                <h3>Late Today</h3>
-                                <p><?php echo $lateToday; ?></p>
+
+                                <h3>
+                                    Late Today
+                                </h3>
+
+                                <p>
+                                    <?php
+                                    echo $lateToday;
+                                    ?>
+                                </p>
+
                             </div>
+
 
                             <div class="summary-card red">
-                                <h3>Absent Today</h3>
-                                <p><?php echo $absentToday; ?></p>
+
+                                <h3>
+                                    Absent Today
+                                </h3>
+
+                                <p>
+                                    <?php
+                                    echo $absentToday;
+                                    ?>
+                                </p>
+
                             </div>
+
                         </div>
+
 
                         <!-- ATTENDANCE TABLE -->
+
                         <div class="employee-panel">
+
                             <div class="panel-header">
-                                <h2>Today's Attendance</h2>
+
+                                <h2>
+                                    Today's Attendance
+                                </h2>
+
                             </div>
 
+
                             <table class="dashboard-table employee-table">
+
                                 <thead>
+
                                     <tr>
-                                        <th>Employee</th>
-                                        <th>Department</th>
-                                        <th>Date</th>
-                                        <th>Time In</th>
-                                        <th>Time Out</th>
-                                        <th>Status</th>
+
+                                        <th>
+                                            Employee
+                                        </th>
+
+                                        <th>
+                                            Department
+                                        </th>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Time In
+                                        </th>
+
+                                        <th>
+                                            Time Out
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
                                         <?php if ($isAdminOrHR): ?>
-                                            <th>Actions</th>
+
+                                            <th>
+                                                Actions
+                                            </th>
+
                                         <?php endif; ?>
+
                                     </tr>
+
                                 </thead>
 
+
                                 <tbody>
+
                                 <?php
-                                /*
-                                |--------------------------------------------------------------------------
-                                | ATTENDANCE QUERY
-                                |--------------------------------------------------------------------------
-                                | Admin / HR : show ALL attendance records, joined with employees for
-                                |              name/department.
-                                | Employee   : show ONLY the records belonging to the logged-in user,
-                                |              matched via an extra join through the users table.
-                                */
+
+                                // ==================================================
+                                // ATTENDANCE QUERY
+                                // ==================================================
+
                                 if ($isAdminOrHR) {
+
+                                    // ==================================================
+                                    // ADMIN / HR
+                                    // SEE ALL ATTENDANCE
+                                    // ==================================================
+
                                     $sql = "
-                                        SELECT attendance.*, employees.firstname, employees.lastname, employees.department
+                                        SELECT
+                                            attendance.*,
+                                            employees.firstname,
+                                            employees.lastname,
+                                            employees.department
+
                                         FROM attendance
-                                        INNER JOIN employees ON attendance.employee_id = employees.id
-                                        ORDER BY attendance.attendance_date DESC
+
+                                        INNER JOIN employees
+                                            ON attendance.employee_id = employees.id
+
+                                        ORDER BY
+                                            attendance.attendance_date DESC
                                     ";
+
+
+                                    $result =
+                                        mysqli_query(
+                                            $conn,
+                                            $sql
+                                        );
+
+
+                                } elseif ($isDepartmentHead) {
+
+                                    // ==================================================
+                                    // DEPARTMENT HEAD
+                                    // SEE OWN DEPARTMENT ONLY
+                                    // ==================================================
+
+                                    $attendanceQuery =
+                                        mysqli_prepare(
+                                            $conn,
+                                            "SELECT
+                                                attendance.*,
+                                                employees.firstname,
+                                                employees.lastname,
+                                                employees.department
+
+                                             FROM attendance
+
+                                             INNER JOIN employees
+                                                ON attendance.employee_id = employees.id
+
+                                             WHERE LOWER(employees.department)
+                                                 = LOWER(?)
+
+                                             ORDER BY
+                                                attendance.attendance_date DESC"
+                                        );
+
+
+                                    mysqli_stmt_bind_param(
+                                        $attendanceQuery,
+                                        "s",
+                                        $headDepartment
+                                    );
+
+
+                                    mysqli_stmt_execute(
+                                        $attendanceQuery
+                                    );
+
+
+                                    $result =
+                                        mysqli_stmt_get_result(
+                                            $attendanceQuery
+                                        );
+
+
                                 } else {
+
+                                    // ==================================================
+                                    // EMPLOYEE
+                                    // SEE OWN ATTENDANCE ONLY
+                                    // ==================================================
+
                                     $sql = "
-                                        SELECT attendance.*, employees.firstname, employees.lastname, employees.department
+                                        SELECT
+                                            attendance.*,
+                                            employees.firstname,
+                                            employees.lastname,
+                                            employees.department
+
                                         FROM attendance
-                                        INNER JOIN employees ON attendance.employee_id = employees.id
-                                        INNER JOIN users ON users.employee_id = employees.id
+
+                                        INNER JOIN employees
+                                            ON attendance.employee_id = employees.id
+
+                                        INNER JOIN users
+                                            ON users.employee_id = employees.id
+
                                         WHERE users.id = $userId
-                                        ORDER BY attendance.attendance_date DESC
+
+                                        ORDER BY
+                                            attendance.attendance_date DESC
                                     ";
+
+
+                                    $result =
+                                        mysqli_query(
+                                            $conn,
+                                            $sql
+                                        );
+
                                 }
 
-                                $result = mysqli_query($conn, $sql);
 
-                                if ($result && mysqli_num_rows($result) > 0) {
-                                    while ($row = mysqli_fetch_assoc($result)) {
+                                // ==================================================
+                                // DISPLAY RECORDS
+                                // ==================================================
 
-                                        // Build initials for the little avatar circle, e.g. "John Smith" -> "JS"
-                                        $initials = strtoupper(substr($row['firstname'], 0, 1) . substr($row['lastname'], 0, 1));
+                                if (
+                                    $result &&
+                                    mysqli_num_rows($result) > 0
+                                ) {
 
-                                        /*
-                                        |----------------------------------------------------------------
-                                        | STATUS BADGE
-                                        |----------------------------------------------------------------
-                                        | Map the raw status string to a CSS class name for coloring
-                                        | the badge (e.g. "On Leave" -> "on-leave").
-                                        */
+                                    while (
+                                        $row =
+                                        mysqli_fetch_assoc($result)
+                                    ) {
+
+
+                                        // ==================================================
+                                        // INITIALS
+                                        // ==================================================
+
+                                        $initials =
+                                            strtoupper(
+                                                substr(
+                                                    $row['firstname'],
+                                                    0,
+                                                    1
+                                                )
+                                                .
+                                                substr(
+                                                    $row['lastname'],
+                                                    0,
+                                                    1
+                                                )
+                                            );
+
+
+                                        // ==================================================
+                                        // STATUS BADGE
+                                        // ==================================================
+
                                         switch ($row['status']) {
+
                                             case "Present":
+
                                                 $badge = "present";
+
                                                 break;
+
+
                                             case "Late":
+
                                                 $badge = "late";
+
                                                 break;
+
+
                                             case "Absent":
+
                                                 $badge = "absent";
+
                                                 break;
+
+
                                             case "On Leave":
+
                                                 $badge = "on-leave";
+
                                                 break;
+
+
                                             default:
+
                                                 $badge = "pending";
+
                                         }
+
                                 ?>
+
                                     <tr>
+
+                                        <!-- EMPLOYEE -->
+
                                         <td>
+
                                             <div class="employee-name">
+
                                                 <div class="emp-avatar blue-bg">
-                                                    <?php echo htmlspecialchars($initials); ?>
+
+                                                    <?php
+                                                    echo htmlspecialchars(
+                                                        $initials
+                                                    );
+                                                    ?>
+
                                                 </div>
-                                                <?php echo htmlspecialchars($row['firstname'] . " " . $row['lastname']); ?>
+
+
+                                                <?php
+
+                                                echo htmlspecialchars(
+                                                    $row['firstname']
+                                                    . " "
+                                                    . $row['lastname']
+                                                );
+
+                                                ?>
+
                                             </div>
+
                                         </td>
 
-                                        <td><?php echo htmlspecialchars($row['department']); ?></td>
+
+                                        <!-- DEPARTMENT -->
 
                                         <td>
-                                            
+
                                             <?php
-                                                echo date("F d, Y", strtotime($row['attendance_date']));
+
+                                            echo htmlspecialchars(
+                                                $row['department']
+                                            );
+
                                             ?>
+
                                         </td>
 
-                                        <td><?php echo htmlspecialchars($row['time_in'] ?? ''); ?></td>
-                                        <td><?php echo htmlspecialchars($row['time_out'] ?? ''); ?></td>
+
+                                        <!-- DATE -->
 
                                         <td>
-                                            <span class="status-badge <?php echo $badge; ?>">
-                                                <?php echo htmlspecialchars($row['status']); ?>
-                                            </span>
+
+                                            <?php
+
+                                            echo date(
+                                                "F d, Y",
+                                                strtotime(
+                                                    $row['attendance_date']
+                                                )
+                                            );
+
+                                            ?>
+
                                         </td>
+
+
+                                        <!-- TIME IN -->
+
+                                        <td>
+
+                                            <?php
+
+                                            echo htmlspecialchars(
+                                                $row['time_in'] ?? ''
+                                            );
+
+                                            ?>
+
+                                        </td>
+
+
+                                        <!-- TIME OUT -->
+
+                                        <td>
+
+                                            <?php
+
+                                            echo htmlspecialchars(
+                                                $row['time_out'] ?? ''
+                                            );
+
+                                            ?>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+
+                                        <td>
+
+                                            <span
+                                                class="status-badge <?php
+                                                    echo $badge;
+                                                ?>"
+                                            >
+
+                                                <?php
+
+                                                echo htmlspecialchars(
+                                                    $row['status']
+                                                );
+
+                                                ?>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- ACTIONS -->
 
                                         <?php if ($isAdminOrHR): ?>
-                                        <td class="actions-cell">
 
-                                            <!-- EDIT: a tiny GET form that just redirects to attendance.php?edit_id=X -->
-                                            <form action="attendance.php" method="GET" style="display:inline;">
-                                                <input type="hidden" name="edit_id" value="<?php echo $row['id']; ?>">
-                                                <button type="submit" class="edit-btn">✏️ Edit</button>
-                                            </form>
+                                            <td class="actions-cell">
 
-                                            <!--
-                                                DELETE: not a real form submit — data-* attributes are read by
-                                                script.js, which presumably opens #deleteModal and fires an
-                                                AJAX/fetch request to actually delete the record.
-                                            -->
-                                            <button
-                                                type="button"
-                                                class="employee-delete-btn"
-                                                data-id="<?php echo $row['id']; ?>"
-                                                data-type="attendance"
-                                                data-name="<?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?>"
-                                            >
-                                                🗑️ Delete
-                                            </button>
 
-                                        </td>
+                                                <!-- EDIT -->
+
+                                                <form
+                                                    action="attendance.php"
+                                                    method="GET"
+                                                    style="display:inline;"
+                                                >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="edit_id"
+                                                        value="<?php
+                                                            echo $row['id'];
+                                                        ?>"
+                                                    >
+
+                                                    <button
+                                                        type="submit"
+                                                        class="edit-btn"
+                                                    >
+                                                        ✏️ Edit
+                                                    </button>
+
+                                                </form>
+
+
+                                                <!-- DELETE -->
+
+                                                <button
+                                                    type="button"
+                                                    class="employee-delete-btn"
+                                                    data-id="<?php
+                                                        echo $row['id'];
+                                                    ?>"
+                                                    data-type="attendance"
+                                                    data-name="<?php
+                                                        echo htmlspecialchars(
+                                                            $row['firstname']
+                                                            . ' '
+                                                            . $row['lastname'],
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        );
+                                                    ?>"
+                                                >
+                                                    🗑️ Delete
+                                                </button>
+
+
+                                            </td>
+
                                         <?php endif; ?>
+
                                     </tr>
+
+
                                 <?php
-                                    } // end while
+
+                                    }
+
                                 } else {
+
                                 ?>
+
                                     <tr>
-                                        <td colspan="<?php echo $isAdminOrHR ? '7' : '6'; ?>" style="text-align:center;">
+
+                                        <td
+                                            colspan="<?php
+                                                echo $isAdminOrHR
+                                                    ? '7'
+                                                    : '6';
+                                            ?>"
+                                            style="text-align:center;"
+                                        >
+
                                             No attendance records found.
+
                                         </td>
+
                                     </tr>
-                                <?php } ?>
+
+                                <?php
+
+                                }
+
+                                ?>
+
                                 </tbody>
+
                             </table>
+
                         </div>
+
 
                     <?php endif; ?>
 
+
                 </div>
+
             </div>
+
         </div>
+
     </main>
+
 </div>
 
-<!-- DELETE MODAL: shared confirmation modal, only rendered for Admin/HR since only they can delete -->
+
+<!-- ==========================================================
+     DELETE MODAL
+     ========================================================== -->
+
 <?php if ($isAdminOrHR): ?>
-<div id="deleteModal" class="modal hidden">
-    <div class="modal-content">
-        <h2>Delete Attendance</h2>
-        <p id="deleteMessage">Are you sure you want to delete this attendance?</p>
-        <div class="modal-actions">
-            <button type="button" id="cancelDeleteBtn">Cancel</button>
-            <button type="button" id="confirmDeleteBtn">Delete</button>
+
+    <div
+        id="deleteModal"
+        class="modal hidden"
+    >
+
+        <div class="modal-content">
+
+            <h2>
+                Delete Attendance
+            </h2>
+
+            <p id="deleteMessage">
+                Are you sure you want to delete this attendance?
+            </p>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelDeleteBtn"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="button"
+                    id="confirmDeleteBtn"
+                >
+                    Delete
+                </button>
+
+            </div>
+
         </div>
+
     </div>
-</div>
+
 <?php endif; ?>
 
+
 <script src="script.js"></script>
+
 </body>
+
 </html>
