@@ -1,3 +1,70 @@
+/* ==========================================================
+   GLOBAL RESET & BASE STYLES
+   ========================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================
+   MAIN LAYOUT SHELL (SIDEBAR FLUSH TO EDGE)
+   ========================================================== */
+.dashboard-shell {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+
+
+.dashboard-main {
+    flex: 1;
+    min-width: 0;               /* Prevents table overflow from breaking layout */
+    padding: 28px;              /* Spacing for main content area only */
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-container,
+.employee-container {
+    width: 100%;
+    max-width: 1400px;          /* Uniform width alignment across all pages */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;                  /* Spacing between header, stats, and panels */
+}
+
+/* Ensure internal panel elements span full layout width */
+.dashboard-content,
+.employee-panel,
+.stats-grid {
+    width: 100%;
+    box-sizing: border-box;
+}
+/* Replace the .sidebar rule in styles/common.css */
+.sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-height: 100vh;
+}
+
+/* ==========================================================
+   DASHBOARD HEADER
+   ========================================================== */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -77,9 +144,12 @@
 .dashboard-header .logout-btn:hover {
     background: linear-gradient(135deg, #16A34A, #166534);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(34,197,94,.35);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, .35);
 }
 
+/* ==========================================================
+   STATS GRID & CARDS
+   ========================================================== */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -101,7 +171,7 @@
 
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .1);
     border-color: #06B6D4;
 }
 
@@ -160,6 +230,9 @@
     color: #EF4444;
 }
 
+/* ==========================================================
+   DASHBOARD CONTENT & PANELS
+   ========================================================== */
 .dashboard-content {
     display: grid;
     grid-template-columns: 2fr 1fr;

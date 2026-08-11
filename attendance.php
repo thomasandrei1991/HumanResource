@@ -436,14 +436,14 @@ if (
 
                         <?php if ($isAdminOrHR): ?>
 
-                            <a
-                                href="attendance.php?show_form=1"
-                                class="primary-btn"
-                                style="text-decoration: none; display: inline-block;"
+                            <button 
+                                type="button" 
+                                class="primary-btn" 
+                                onclick="window.location.href='attendance.php?show_form=1'"
                             >
                                 + Record Attendance
-                            </a>
-
+                            </button>
+            
                         <?php endif; ?>
 
                     </div>

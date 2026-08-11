@@ -466,7 +466,7 @@ if ($isAdminOrHR) {
                                                     href="employee.php?edit_id=<?php echo $employee['id']; ?>"
                                                     class="edit-btn"
                                                 >
-                                                    ✏️ Edit
+                                                    Edit
                                                 </a>
 
 
@@ -482,7 +482,7 @@ if ($isAdminOrHR) {
                                                     ); ?>"
                                                     data-type="employee"
                                                 >
-                                                    🗑️ Delete
+                                                    Delete
                                                 </button>
 
                                             </td>

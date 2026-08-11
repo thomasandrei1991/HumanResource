@@ -5,7 +5,6 @@
     // Query to get every employee's id, firstname, and lastname,
     // sorted alphabetically by firstname
     $sql = "SELECT id, firstname, lastname FROM employees ORDER BY firstname ASC";
-
     // Run the query and store the result set (a mysqli_result object) in $result
     $result = mysqli_query($conn, $sql);
 ?>
@@ -80,7 +79,6 @@
                 <option value="On Leave">On Leave</option>
             </select>
         </div>
-
         <div class="form-actions">
             <button type="submit" class="primary-btn">Save</button>
         </div>

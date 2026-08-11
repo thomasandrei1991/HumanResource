@@ -1,94 +1,214 @@
-.container{
+/* ==========================================
+   LOGIN PAGE - MODERN BALANCED STYLES
+   ========================================== */
+
+/* Layout & Background */
+.container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 24px 16px;
+    background-color: #f8fafc;
 }
 
-.form-container{
-    background-color: white;
-    width: 430px;
-    max-width: 100%;
-    padding: 36px 32px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.12);
-    margin: 20px 0;
-}
-
-.form-container form{
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.input-group{
-    display: flex;
-    flex-direction: column;
-}
-
-.input-group label{
-    margin-bottom: 8px;
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.inputs{
+/* Form Card */
+.form-container {
+    background-color: #ffffff;
     width: 100%;
-    height: 44px;
-    padding: 0 12px;
-    border: 1px solid #d1d5db;
+    max-width: 400px;
+    padding: 32px 28px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    border: 1px solid #e2e8f0;
+}
+
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Brand/Logo Header */
+.img-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.img-group img {
+    max-width: 180px;
+    max-height: 60px;
+    object-fit: contain;
+}
+
+/* Form Fields & Inputs */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.inputs {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
     outline: none;
-    transition: .3s;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
     font-size: 14px;
+    font-family: inherit;
+    color: #0f172a;
+    background-color: #ffffff;
 }
 
-.inputs:focus{
-    border-color: #3b82f6;
-    box-shadow: 0 0 5px rgba(59,130,246,.5);
+.inputs::placeholder {
+    color: #94a3b8;
 }
 
-.showPassword{
+.inputs:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* Checkbox Option */
+.showPassword {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-top: -2px;
 }
 
-.showPassword input{
+.showPassword input[type="checkbox"] {
     width: 16px;
     height: 16px;
+    accent-color: #0284c7;
+    cursor: pointer;
+    border-radius: 4px;
 }
 
-.showPassword label{
-    font-size: 14px;
-    color: #555;
+.showPassword label {
+    font-size: 13px;
+    color: #475569;
+    cursor: pointer;
+    user-select: none;
 }
 
-#btn-submit{
+/* Submit Button */
+#btn-submit {
     width: 100%;
-    height: 46px;
+    height: 42px;
     border: none;
     border-radius: 8px;
-    background: linear-gradient(135deg,#06B6D4,#0284C7);
-    color: white;
-    font-weight: bold;
-    transition: all .3s ease;
-    margin-top: 4px;
-}
-
-#btn-submit:hover{
-    background: linear-gradient(135deg, #16A34A, #166534);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(34,197,94,.35);
+    background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    margin-top: 6px;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
 }
 
-.links{
+#btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    opacity: 0.96;
+}
+
+#btn-submit:active {
+    transform: translateY(0);
+}
+
+/* Navigation Links */
+.links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+.links p {
+    margin: 0;
+}
+
+.links a {
+    color: #0284c7;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+
+.links a:hover {
+    color: #0369a1;
+    text-decoration: underline;
+}
+
+/* Modal Overlay & Card */
+.modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-    font-size: 15px;
-    gap: 5px;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: #ffffff;
+    padding: 24px 28px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.modal-content h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.modal-content p {
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 18px;
+}
+
+.modal-content button {
+    width: 100%;
+    height: 38px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.modal-content button:hover {
+    opacity: 0.92;
 }

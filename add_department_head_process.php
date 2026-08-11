@@ -1,271 +1,260 @@
 <?php
 
-session_start();
+    session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
-require_once 'database.php';
+    require_once 'database.php';
 
-$userRole = $_SESSION['role'] ?? '';
-
-
-// ==========================
-// ADMIN ONLY
-// ==========================
-
-if ($userRole !== 'Admin') {
-    header("Location: dashboard.php");
-    exit();
-}
+    $userRole = $_SESSION['role'] ?? '';
 
 
-// ==========================
-// GET FORM DATA
-// ==========================
+    // ==========================
+    // ADMIN ONLY
+    // ==========================
 
-$departmentId = intval(
-    $_POST['department_id'] ?? 0
-);
-
-$fullname = trim(
-    $_POST['fullname'] ?? ''
-);
-
-$username = trim(
-    $_POST['username'] ?? ''
-);
-
-$password = trim(
-    $_POST['password'] ?? ''
-);
-
-$confirmPassword = trim(
-    $_POST['confirmPassword'] ?? ''
-);
+    if ($userRole !== 'Admin') {
+        header("Location: dashboard.php");
+        exit();
+    }
 
 
-// ==========================
-// REQUIRED FIELDS
-// ==========================
+    // ==========================
+    // GET FORM DATA
+    // ==========================
 
-if (
-    $departmentId <= 0 ||
-    $fullname === '' ||
-    $username === '' ||
-    $password === '' ||
-    $confirmPassword === ''
-) {
-
-    die("Please complete all fields.");
-
-}
-
-
-// ==========================
-// PASSWORD MATCH
-// ==========================
-
-if ($password !== $confirmPassword) {
-
-    die("Passwords do not match.");
-
-}
-
-
-// ==========================
-// PASSWORD LENGTH
-// ==========================
-
-if (strlen($password) < 5) {
-
-    die(
-        "Password must be at least 5 characters long."
+    $departmentId = intval(
+        $_POST['department_id'] ?? 0
     );
 
-}
-
-
-// ==========================
-// GET DEPARTMENT
-// ==========================
-
-$departmentQuery = mysqli_query(
-    $conn,
-    "SELECT
-        id,
-        department_name,
-        department_head
-     FROM departments
-     WHERE id = $departmentId
-     AND status = 'Active'"
-);
-
-
-if (
-    !$departmentQuery ||
-    mysqli_num_rows($departmentQuery) === 0
-) {
-
-    die("Department not found.");
-
-}
-
-
-$department = mysqli_fetch_assoc(
-    $departmentQuery
-);
-
-$departmentName =
-    $department['department_name'];
-
-
-// ==========================
-// CHECK DEPARTMENT HEAD NAME
-// ==========================
-
-if (
-    empty($department['department_head'])
-) {
-
-    die(
-        "This department does not have a department head assigned yet."
+    $fullname = trim(
+        $_POST['fullname'] ?? ''
     );
 
-}
-
-
-// ==========================
-// CHECK NAME
-// ==========================
-
-if (
-    strcasecmp(
-        trim($fullname),
-        trim($department['department_head'])
-    ) !== 0
-) {
-
-    die(
-        "The name does not match the department head assigned to this department."
+    $username = trim(
+        $_POST['username'] ?? ''
     );
 
-}
+    $password = trim(
+        $_POST['password'] ?? ''
+    );
+
+    $confirmPassword = trim(
+        $_POST['confirmPassword'] ?? ''
+    );
 
 
-// ==========================
-// ESCAPE DATA
-// ==========================
+    // ==========================
+    // REQUIRED FIELDS
+    // ==========================
 
-$fullnameEscaped =
-    mysqli_real_escape_string(
+    if (
+        $departmentId <= 0 ||
+        $fullname === '' ||
+        $username === '' ||
+        $password === '' ||
+        $confirmPassword === ''
+    ) {
+
+        die("Please complete all fields.");
+
+    }
+
+
+    // ==========================
+    // PASSWORD MATCH
+    // ==========================
+
+    if ($password !== $confirmPassword) {
+
+        die("Passwords do not match.");
+
+    }
+
+
+    // ==========================
+    // PASSWORD LENGTH
+    // ==========================
+
+    if (strlen($password) < 5) {
+        die("Password must be at least 5 characters long.");
+    }
+
+
+    // ==========================
+    // GET DEPARTMENT
+    // ==========================
+
+    $departmentQuery = mysqli_query($conn, "SELECT id, department_name, department_head
+        FROM departments
+        WHERE id = $departmentId
+        AND status = 'Active'"
+    );
+
+
+    if (
+        !$departmentQuery ||
+        mysqli_num_rows($departmentQuery) === 0
+    ) {
+
+        die("Department not found.");
+
+    }
+
+
+    $department = mysqli_fetch_assoc(
+        $departmentQuery
+    );
+
+    $departmentName =
+        $department['department_name'];
+
+
+    // ==========================
+    // CHECK DEPARTMENT HEAD NAME
+    // ==========================
+
+    if (
+        empty($department['department_head'])
+    ) {
+
+        die("This department does not have a department head assigned yet.");
+
+    }
+
+
+    // ==========================
+    // CHECK NAME
+    // ==========================
+
+    if (
+        strcasecmp(
+            trim($fullname),
+            trim($department['department_head'])
+        ) !== 0
+    ) {
+
+        die(
+            "The name does not match the department head assigned to this department."
+        );
+
+    }
+
+
+    // ==========================
+    // ESCAPE DATA
+    // ==========================
+
+    $fullnameEscaped =
+        mysqli_real_escape_string(
+            $conn,
+            $fullname
+        );
+
+    $usernameEscaped =
+        mysqli_real_escape_string(
+            $conn,
+            $username
+        );
+
+
+    // ==========================
+    // CHECK USERNAME
+    // ==========================
+
+    $usernameCheck = mysqli_query(
         $conn,
-        $fullname
+        "SELECT id
+        FROM users
+        WHERE username = '$usernameEscaped'"
     );
 
-$usernameEscaped =
-    mysqli_real_escape_string(
+
+    if (
+        $usernameCheck &&
+        mysqli_num_rows($usernameCheck) > 0
+    ) {
+
+        die("Username already exists.");
+
+    }
+
+
+    // ==========================
+    // CHECK EXISTING DEPARTMENT HEAD ACCOUNT
+    // ==========================
+
+    $headAccountCheck = mysqli_query(
         $conn,
-        $username
+        "SELECT id
+        FROM users
+        WHERE fullname = '$fullnameEscaped'
+        AND role = 'Department Head'"
     );
 
 
-// ==========================
-// CHECK USERNAME
-// ==========================
+    if (
+        $headAccountCheck &&
+        mysqli_num_rows($headAccountCheck) > 0
+    ) {
 
-$usernameCheck = mysqli_query(
-    $conn,
-    "SELECT id
-     FROM users
-     WHERE username = '$usernameEscaped'"
-);
+        die(
+            "This department head already has an account."
+        );
 
-
-if (
-    $usernameCheck &&
-    mysqli_num_rows($usernameCheck) > 0
-) {
-
-    die("Username already exists.");
-
-}
+    }
 
 
-// ==========================
-// CHECK EXISTING DEPARTMENT HEAD ACCOUNT
-// ==========================
+    // ==========================
+    // HASH PASSWORD
+    // ==========================
 
-$headAccountCheck = mysqli_query(
-    $conn,
-    "SELECT id
-     FROM users
-     WHERE fullname = '$fullnameEscaped'
-     AND role = 'Department Head'"
-);
+    $hashedPassword = password_hash(
+        $password,
+        PASSWORD_DEFAULT
+    );
 
 
-if (
-    $headAccountCheck &&
-    mysqli_num_rows($headAccountCheck) > 0
-) {
+    // ==========================
+    // CREATE ACCOUNT
+    // ==========================
+
+    $insertQuery = mysqli_query(
+        $conn,
+        "INSERT INTO users
+        (
+            employee_id,
+            fullname,
+            username,
+            password,
+            role
+        )
+        VALUES
+        (
+            NULL,
+            '$fullnameEscaped',
+            '$usernameEscaped',
+            '$hashedPassword',
+            'Department Head'
+        )"
+    );
+
+
+    if ($insertQuery) {
+
+        header("Location: add_department_head.php?success=added");
+
+        exit();
+
+    }
+
 
     die(
-        "This department head already has an account."
+        "Failed to create account: "
+        . mysqli_error($conn)
     );
-
-}
-
-
-// ==========================
-// HASH PASSWORD
-// ==========================
-
-$hashedPassword = password_hash(
-    $password,
-    PASSWORD_DEFAULT
-);
-
-
-// ==========================
-// CREATE ACCOUNT
-// ==========================
-
-$insertQuery = mysqli_query(
-    $conn,
-    "INSERT INTO users
-    (
-        employee_id,
-        fullname,
-        username,
-        password,
-        role
-    )
-    VALUES
-    (
-        NULL,
-        '$fullnameEscaped',
-        '$usernameEscaped',
-        '$hashedPassword',
-        'Department Head'
-    )"
-);
-
-
-if ($insertQuery) {
-
-    header("Location: add_department_head.php?success=added");
-
-    exit();
-
-}
-
-
-die(
-    "Failed to create account: "
-    . mysqli_error($conn)
-);
 
 ?>
