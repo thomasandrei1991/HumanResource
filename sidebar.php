@@ -33,13 +33,37 @@ $userRole = $_SESSION['role'] ?? '';
     <nav class="sidebar-nav">
 
         <!-- DASHBOARD -->
+         <?php
 
-        <a
-            href="dashboard.php"
-            class="nav-item <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>"
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            $userRole = $_SESSION['role'] ?? '';
+
+            $dashboardLink = 'dashboard.php';
+
+            if ($userRole === 'Employee') {
+
+                $dashboardLink = 'employee_dashboard.php';
+
+            } elseif ($userRole === 'Department Head') {
+
+                $dashboardLink = 'department_head_dashboard.php';
+
+            }
+
+        ?>
+
+       <a
+            href="<?php echo htmlspecialchars($dashboardLink); ?>"
+            class="nav-item <?php echo ($currentPage === basename($dashboardLink)) ? 'active' : ''; ?>"
         >
-            <img src="images/chart-bar-popular.png" alt="">
-            Dashboard
+            <img
+                src="images/chart-bar-popular.png"
+                alt="Dashboard"
+            >
+            <span>Dashboard</span>
         </a>
 
 
