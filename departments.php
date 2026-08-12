@@ -102,97 +102,46 @@
                             <p class="page-kicker">Organization Management</p>
                             <h1>Departments</h1>
                         </div>
-                        <button
-                            type="button"
-                            class="primary-btn"
-                            id="addDepartmentBtn"
-                        >
+                        <button type="button" class="primary-btn" id="addDepartmentBtn">
                             + Add Department
                         </button>
                     </div>
+
                     <!-- ==========================
                         ADD DEPARTMENT FORM
                     ========================== -->
 
                     <div id="addDepartmentFormPanel" class="employee-form-panel hidden">
-
                         <div class="panel-header">
                             <h2>Add New Department</h2>
                         </div>
-
-                        <form
-                            action="add_department_process.php"
-                            method="POST"
-                            id="addDepartmentForm"
-                        >
-
+                        <form action="add_department_process.php" method="POST" id="addDepartmentForm">
                             <div class="input-group">
-                                <label for="departmentName">
-                                    Department Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="departmentName"
-                                    name="department_name"
-                                    class="inputs"
-                                    placeholder="Enter department name"
-                                    required
+                                <label for="departmentName">Department Name</label>
+                                <input type="text" id="departmentName" name="department_name" class="inputs" 
+                                    placeholder="Enter department name"required
                                 >
                             </div>
 
-
                             <div class="input-group">
-                                <label for="departmentHead">
-                                    Department Head
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="departmentHead"
-                                    name="department_head"
-                                    class="inputs"
-                                    placeholder="Enter department head"
+                                <label for="departmentHead">Department Head</label>
+                                <input type="text" id="departmentHead" name="department_head" class="inputs" 
+                                placeholder="Enter department head"
                                 >
                             </div>
 
-
                             <div class="input-group">
-                                <label for="departmentStatus">
-                                    Status
-                                </label>
-
-                                <select
-                                    id="departmentStatus"
-                                    name="status"
-                                    class="inputs"
-                                    required
-                                >
+                                <label for="departmentStatus">Status</label>
+                                <select id="departmentStatus" name="status" class="inputs" required>
                                     <option value="Active">Active</option>
                                     <option value="Inactive">Inactive</option>
                                 </select>
                             </div>
 
-
                             <div class="form-actions">
-
-                                <button
-                                    type="submit"
-                                    class="primary-btn"
-                                >
-                                    Save
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="primary-btn"
-                                    id="cancelAddDepartmentBtn"
-                                >
-                                    Cancel
-                                </button>
-
+                                <button type="submit" class="primary-btn">Save</button>
+                                <button type="button" class="primary-btn" id="cancelAddDepartmentBtn">Cancel</button>
                             </div>
-
                         </form>
 
                     </div>
@@ -239,9 +188,7 @@
                             );
 
                             if ($departmentQuery && mysqli_num_rows($departmentQuery) > 0):
-
                                 while ($department = mysqli_fetch_assoc($departmentQuery)):
-
                                     $departmentName = $department['department_name'];
                                     $departmentHead = $department['department_head'];
                                     $status = $department['status'];
@@ -318,24 +265,15 @@
                                 </td>
                                 <td colspan="5" style="text-align: center;">
                                     <div class="action-buttons">
-
-                                        <a
-                                            href="edit_department.php?id=<?php echo $department['id']; ?>"
-                                            class="edit-btn"
-                                        >
-                                            ✏️ Edit
-                                        </a>
-
-                                        <button
-                                            type="button"
-                                            class="employee-delete-btn delete-btn"
+                                        <button type="button" class="edit-btn"  onclick="window.location.href='edit_department.php?id=<?php echo $department['id']; ?>'">
+                                            Edit
+                                        </button>
+                                        <button type="button" class="employee-delete-btn delete-btn" 
                                             data-id="<?php echo $department['id']; ?>"
                                             data-type="department"
-                                            data-name="<?php echo htmlspecialchars($departmentName); ?>"
-                                        >
-                                            🗑️ Delete
+                                            data-name="<?php echo htmlspecialchars($departmentName); ?>">
+                                            Delete
                                         </button>
-
                                     </div>
                                 </td>
                             </tr>
@@ -356,77 +294,38 @@
             </div>
         </main>
     </div>
+
     <!-- ==========================
         DELETE DEPARTMENT MODAL
     ========================== -->
 
     <div id="deleteModal" class="modal hidden">
-
         <div class="modal-content">
-
             <div class="panel-header">
                 <h2>Delete Department</h2>
             </div>
-
-            <p id="deleteMessage">
-                Are you sure you want to delete this department?
-            </p>
-
+            <p id="deleteMessage">Are you sure you want to delete this department?</p>
             <div class="form-actions">
-
-                <button
-                    type="button"
-                    class="primary-btn"
-                    id="confirmDeleteBtn"
-                >
-                    Delete
-                </button>
-
-                <button
-                    type="button"
-                    class="primary-btn"
-                    id="cancelDeleteBtn"
-                >
-                    Cancel
-                </button>
-
+                <button type="button" class="primary-btn" id="confirmDeleteBtn">Delete</button>
+                <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
             </div>
-
         </div>
-
     </div>
+
     <!-- ==========================
         DEPARTMENT RESULT MODAL
     ========================== -->
 
     <div id="departmentResultModal" class="modal hidden">
-
         <div class="modal-content">
-
             <div class="panel-header">
-                <h2 id="departmentModalTitle">
-                    Department
-                </h2>
+                <h2 id="departmentModalTitle">Department</h2>
             </div>
-
-            <p id="departmentModalMessage">
-                Department action completed.
-            </p>
-
+            <p id="departmentModalMessage">Department action completed.</p>
             <div class="form-actions">
-
-                <button
-                    type="button"
-                    class="primary-btn"
-                    id="closeDepartmentModalBtn"
-                >
-                    OK
-                </button>
-
+                <button type="button" class="primary-btn" id="closeDepartmentModalBtn">OK</button>
             </div>
-
         </div>
-
     </div>
     <script>
 
@@ -436,25 +335,18 @@
         const modalTitle = document.getElementById('departmentModalTitle');
         const modalMessage = document.getElementById('departmentModalMessage');
         const closeBtn = document.getElementById('closeDepartmentModalBtn');
-
         const title = <?php echo json_encode($departmentModalTitle); ?>;
         const message = <?php echo json_encode($departmentModalMessage); ?>;
 
         if (title && message && modal) {
-
             modalTitle.textContent = title;
             modalMessage.textContent = message;
-
             modal.classList.remove('hidden');
-
         }
 
         if (closeBtn) {
-
             closeBtn.addEventListener('click', function () {
-
                 modal.classList.add('hidden');
-
                 // Remove query parameters after closing modal
                 window.history.replaceState(
                     {},

@@ -1,79 +1,63 @@
 <?php
 
-session_start();
+    session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
-$currentPage = basename($_SERVER['PHP_SELF']);
-$userRole = $_SESSION['role'] ?? '';
+    $currentPage = basename($_SERVER['PHP_SELF']);
+    $userRole = $_SESSION['role'] ?? '';
 
-require_once 'database.php';
+    require_once 'database.php';
 
-// ========================================
-// ADMIN ACCESS ONLY
-// ========================================
+    // ========================================
+    // ADMIN ACCESS ONLY
+    // ========================================
 
-if ($userRole !== 'Admin') {
-    header("Location: dashboard.php");
-    exit();
-}
+    if ($userRole !== 'Admin') {
+        header("Location: dashboard.php");
+        exit();
+    }
 
-// ========================================
-// GET DEPARTMENT HEADS
-// ========================================
+    // ========================================
+    // GET DEPARTMENT HEADS
+    // ========================================
 
-$departmentHeadsQuery = mysqli_query(
-    $conn,
-    "SELECT 
-        u.id AS user_id,
-        u.fullname,
-        u.username,
-        u.role,
-        d.department_name,
-        d.status AS department_status
-    FROM users u
-    LEFT JOIN departments d
-        ON d.department_head = u.fullname
-    WHERE u.role = 'Department Head'
-    ORDER BY u.fullname ASC"
-);
+    $departmentHeadsQuery = mysqli_query(
+        $conn,
+        "SELECT 
+            u.id AS user_id,
+            u.fullname,
+            u.username,
+            u.role,
+            d.department_name,
+            d.status AS department_status
+        FROM users u
+        LEFT JOIN departments d
+            ON d.department_head = u.fullname
+        WHERE u.role = 'Department Head'
+        ORDER BY u.fullname ASC"
+    );
 
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <link
-        rel="stylesheet"
-        href="styles/common.css"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/common.css">
+    <link rel="stylesheet" href="styles/department_heads.css">
     <title>Department Heads | HR Dashboard</title>
-
 </head>
 
 <body class="dashboard-page">
-
 <div class="dashboard-shell">
-
     <?php include 'sidebar.php'; ?>
-
     <main class="dashboard-main">
-
         <div class="dashboard-container">
-
             <div class="department-container">
 
                 <!-- ==========================
@@ -81,26 +65,13 @@ $departmentHeadsQuery = mysqli_query(
                 ========================== -->
 
                 <div class="page-header">
-
                     <div>
-
-                        <p class="page-kicker">
-                            Organization Management
-                        </p>
-
-                        <h1>
-                            Department Heads
-                        </h1>
-
+                        <p class="page-kicker">Organization Management</p>
+                        <h1>Department Heads</h1>
                     </div>
-
-                    <a
-                        href="add_department_head.php"
-                        class="primary-btn"
-                    >
+                    <button onclick="window.location.href='add_department_head.php'" class="primary-btn">
                         + Add Department Head
-                    </a>
-
+                    </button>
                 </div>
 
 
@@ -109,134 +80,55 @@ $departmentHeadsQuery = mysqli_query(
                 ========================== -->
 
                 <div class="employee-panel">
-
                     <div class="panel-header">
-
-                        <h2>
-                            Department Head Directory
-                        </h2>
-
+                        <h2>Department Head Directory</h2>
                     </div>
 
-
                     <table class="dashboard-table employee-table">
-
                         <thead>
-
                             <tr>
-
-                                <th>
-                                    Department Head
-                                </th>
-
-                                <th>
-                                    Department
-                                </th>
-
-                                <th>
-                                    Username
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
+                                <th>Department Head</th>
+                                <th>Department</th>
+                                <th>Username</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
-
                         </thead>
-
-
                         <tbody>
-
                         <?php
 
-                        if (
-                            $departmentHeadsQuery &&
-                            mysqli_num_rows($departmentHeadsQuery) > 0
-                        ):
+                            if ($departmentHeadsQuery && mysqli_num_rows($departmentHeadsQuery) > 0):
+                                while ($head = mysqli_fetch_assoc($departmentHeadsQuery)):
+                                    $fullname = $head['fullname'];
+                                    $departmentName = $head['department_name']?? 'Not Assigned';
+                                    $username = $head['username'];
+                                    $departmentStatus = $head['department_status']?? 'Inactive';
 
-                            while (
-                                $head =
-                                mysqli_fetch_assoc(
-                                    $departmentHeadsQuery
-                                )
-                            ):
+                                    // ========================================
+                                    // INITIALS
+                                    // ========================================
 
-                                $fullname =
-                                    $head['fullname'];
+                                    $words = explode(' ', $fullname);
+                                    $initials = '';
 
-                                $departmentName =
-                                    $head['department_name']
-                                    ?? 'Not Assigned';
-
-                                $username =
-                                    $head['username'];
-
-                                $departmentStatus =
-                                    $head['department_status']
-                                    ?? 'Inactive';
-
-
-                                // ========================================
-                                // INITIALS
-                                // ========================================
-
-                                $words =
-                                    explode(
-                                        ' ',
-                                        $fullname
-                                    );
-
-                                $initials = '';
-
-                                foreach (
-                                    $words as $word
-                                ) {
-
-                                    if (
-                                        !empty($word)
-                                    ) {
-
-                                        $initials .=
-                                            strtoupper(
-                                                substr(
-                                                    $word,
-                                                    0,
-                                                    1
-                                                )
-                                            );
+                                    foreach ($words as $word) {
+                                        if (!empty($word)) {
+                                            $initials .= strtoupper(substr($word, 0, 1));
+                                        }
                                     }
-                                }
 
-                                $initials =
-                                    substr(
-                                        $initials,
-                                        0,
-                                        2
-                                    );
+                                    $initials = substr($initials, 0, 2);
 
+                                    // ========================================
+                                    // STATUS CLASS
+                                    // ========================================
 
-                                // ========================================
-                                // STATUS CLASS
-                                // ========================================
-
-                                if (
-                                    $departmentStatus ===
-                                    'Active'
-                                ) {
-
-                                    $statusClass =
-                                        'present';
-
-                                } else {
-
-                                    $statusClass =
-                                        'absent';
-                                }
+                                    if ($departmentStatus === 'Active') {
+                                        $statusClass = 'present';
+                                    } 
+                                    else {
+                                        $statusClass = 'absent';
+                                    }
 
                         ?>
 
@@ -245,29 +137,13 @@ $departmentHeadsQuery = mysqli_query(
                                 <!-- ==========================
                                     NAME
                                 ========================== -->
-
                                 <td>
-
                                     <div class="employee-name">
-
-                                        <div
-                                            class="emp-avatar blue-bg"
-                                        >
-                                            <?php
-                                            echo htmlspecialchars(
-                                                $initials
-                                            );
-                                            ?>
+                                        <div class="emp-avatar blue-bg">
+                                            <?php echo htmlspecialchars($initials);?>
                                         </div>
-
-                                        <?php
-                                        echo htmlspecialchars(
-                                            $fullname
-                                        );
-                                        ?>
-
+                                        <?php echo htmlspecialchars($fullname);?>
                                     </div>
-
                                 </td>
 
 
@@ -275,53 +151,23 @@ $departmentHeadsQuery = mysqli_query(
                                     DEPARTMENT
                                 ========================== -->
 
-                                <td>
-
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $departmentName
-                                    );
-                                    ?>
-
-                                </td>
-
+                                <td><?php echo htmlspecialchars($departmentName);?></td>
 
                                 <!-- ==========================
                                     USERNAME
                                 ========================== -->
 
-                                <td>
-
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $username
-                                    );
-                                    ?>
-
-                                </td>
-
+                                <td><?php echo htmlspecialchars($username);?></td>
 
                                 <!-- ==========================
                                     STATUS
                                 ========================== -->
 
                                 <td>
-
-                                    <span
-                                        class="status-badge
-                                        <?php
-                                        echo $statusClass;
-                                        ?>"
-                                    >
-
-                                        <?php
-                                        echo htmlspecialchars(
-                                            $departmentStatus
-                                        );
-                                        ?>
-
+                                    <span class="status-badge
+                                        <?php echo $statusClass;?>">
+                                        <?php echo htmlspecialchars($departmentStatus);?>
                                     </span>
-
                                 </td>
 
 
@@ -330,118 +176,56 @@ $departmentHeadsQuery = mysqli_query(
                                 ========================== -->
 
                                 <td>
-
-                                    <div
-                                        class="action-buttons"
-                                    >
-
-                                        <a
-                                            href="edit_department_head.php?id=<?php echo $head['user_id']; ?>"
-                                            class="edit-btn"
+                                    <div class="action-buttons">
+                                        <button type="button" class="edit-btn" 
+                                            onclick="window.location.href='edit_department_head.php?id=<?php echo $head['user_id']; ?>'"
                                         >
                                             Edit
-                                        </a>
+                                        </button>
 
-                                        <button
-                                            type="button"
-                                            class="employee-delete-btn delete-btn"
+                                        <button type="button" class="employee-delete-btn delete-btn"
                                             data-id="<?php echo $head['user_id']; ?>"
                                             data-type="department_head"
                                             data-name="<?php echo htmlspecialchars($fullname); ?>"
                                         >
                                             Delete
                                         </button>
-
                                     </div>
-
                                 </td>
-
                             </tr>
-
                         <?php
-
                             endwhile;
-
-                        else:
-
+                            else:
                         ?>
-
                             <tr>
-
-                                <td
-                                    colspan="5"
-                                    style="text-align:center;"
-                                >
+                                <td colspan="5" style="text-align:center;">
                                     No department heads found.
                                 </td>
-
                             </tr>
-
-                        <?php endif; ?>
-
+                            <?php endif; ?>
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
     </main>
-
 </div>
-
 
 <!-- ==========================
     DELETE MODAL
 ========================== -->
 
-<div
-    id="deleteModal"
-    class="modal hidden"
-    role="dialog"
-    aria-modal="true"
->
-
+<div id="deleteModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-content">
-
-        <h3>
-            Delete Department Head
-        </h3>
-
-        <p id="deleteMessage">
-            Are you sure you want to delete this department head?
-        </p>
-
+        <h3>Delete Department Head</h3>
+        <p id="deleteMessage">Are you sure you want to delete this department head?</p>
         <div class="form-actions">
-
-            <button
-                type="button"
-                class="primary-btn"
-                id="cancelDeleteBtn"
-            >
-                Cancel
-            </button>
-
-            <button
-                type="button"
-                class="primary-btn"
-                id="confirmDeleteBtn"
-            >
-                Delete
-            </button>
-
+            <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
+            <button type="button" class="primary-btn" id="confirmDeleteBtn">Delete</button>
         </div>
-
     </div>
-
 </div>
 
-
 <script src="script.js"></script>
-
 </body>
-
 </html>

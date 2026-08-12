@@ -136,39 +136,18 @@
 
         <div class="input-group">
             <label for="department">Department</label>
-
-            <select
-                id="department"
-                name="department"
-                class="inputs"
-                required
-            >
-                <option value="" disabled selected>
-                    Select department
-                </option>
-
+            <select id="department" name="department" class="inputs" required>
+                <option value="" disabled selected>Select department</option>
                 <?php
-                if ($departmentQuery && mysqli_num_rows($departmentQuery) > 0):
-
+                    if ($departmentQuery && mysqli_num_rows($departmentQuery) > 0):
                     while ($department = mysqli_fetch_assoc($departmentQuery)):
                 ?>
-
-                    <option value="<?php echo htmlspecialchars($department['department_name']); ?>">
-                        <?php echo htmlspecialchars($department['department_name']); ?>
-                    </option>
-
-                <?php
-                    endwhile;
-
-                else:
-                ?>
-
-                    <option value="" disabled>
-                        No departments available
-                    </option>
-
+                <option value="<?php echo htmlspecialchars($department['department_name']); ?>">
+                    <?php echo htmlspecialchars($department['department_name']); ?>
+                </option>
+                <?php endwhile; else: ?>
+                    <option value="" disabled>No departments available</option>
                 <?php endif; ?>
-
             </select>
         </div>
 

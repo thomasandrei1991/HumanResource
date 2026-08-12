@@ -16,12 +16,10 @@
 
     <!-- This form submits via POST to add_attendance_process.php, which is the file you shared earlier -->
     <form action="add_attendance_process.php" method="POST">
-
         <div class="input-group">
             <label for="employee">Employee</label>
             <select id="employee" name="employee_id" class="inputs" required>
                 <option value="">Select employee</option>
-
                 <?php
                     // Only loop through results if there's at least one employee row
                     if (mysqli_num_rows($result) > 0) {
@@ -48,14 +46,7 @@
             <div class="input-group">
             <label for="attendanceDate">Date</label>
             <!-- Native HTML5 date picker input; hardcoded default value here, see note below -->
-            <input
-                type="date"
-                id="attendanceDate"
-                name="attendance_date"
-                class="inputs"
-                value="<?php echo date('Y-m-d'); ?>"
-                required
-            >
+            <input type="date" id="attendanceDate" name="attendance_date" class="inputs" value="<?php echo date('Y-m-d'); ?>" required>
         </div>
 
         <div class="input-group">

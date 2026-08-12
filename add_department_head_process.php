@@ -26,25 +26,11 @@
     // GET FORM DATA
     // ==========================
 
-    $departmentId = intval(
-        $_POST['department_id'] ?? 0
-    );
-
-    $fullname = trim(
-        $_POST['fullname'] ?? ''
-    );
-
-    $username = trim(
-        $_POST['username'] ?? ''
-    );
-
-    $password = trim(
-        $_POST['password'] ?? ''
-    );
-
-    $confirmPassword = trim(
-        $_POST['confirmPassword'] ?? ''
-    );
+    $departmentId = intval($_POST['department_id'] ?? 0);
+    $fullname = trim($_POST['fullname'] ?? '');
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $confirmPassword = trim($_POST['confirmPassword'] ?? '');
 
 
     // ==========================
@@ -69,9 +55,7 @@
     // ==========================
 
     if ($password !== $confirmPassword) {
-
         die("Passwords do not match.");
-
     }
 
 
@@ -95,34 +79,19 @@
     );
 
 
-    if (
-        !$departmentQuery ||
-        mysqli_num_rows($departmentQuery) === 0
-    ) {
-
+    if (!$departmentQuery || mysqli_num_rows($departmentQuery) === 0) {
         die("Department not found.");
-
     }
 
-
-    $department = mysqli_fetch_assoc(
-        $departmentQuery
-    );
-
-    $departmentName =
-        $department['department_name'];
-
+    $department = mysqli_fetch_assoc($departmentQuery);
+    $departmentName = $department['department_name'];
 
     // ==========================
     // CHECK DEPARTMENT HEAD NAME
     // ==========================
 
-    if (
-        empty($department['department_head'])
-    ) {
-
+    if (empty($department['department_head'])) {
         die("This department does not have a department head assigned yet.");
-
     }
 
 
@@ -130,17 +99,8 @@
     // CHECK NAME
     // ==========================
 
-    if (
-        strcasecmp(
-            trim($fullname),
-            trim($department['department_head'])
-        ) !== 0
-    ) {
-
-        die(
-            "The name does not match the department head assigned to this department."
-        );
-
+    if (strcasecmp(trim($fullname), trim($department['department_head'])) !== 0) {
+        die("The name does not match the department head assigned to this department.");
     }
 
 
@@ -148,26 +108,14 @@
     // ESCAPE DATA
     // ==========================
 
-    $fullnameEscaped =
-        mysqli_real_escape_string(
-            $conn,
-            $fullname
-        );
-
-    $usernameEscaped =
-        mysqli_real_escape_string(
-            $conn,
-            $username
-        );
-
+    $fullnameEscaped =  mysqli_real_escape_string($conn, $fullname);
+    $usernameEscaped = mysqli_real_escape_string($conn, $username);
 
     // ==========================
     // CHECK USERNAME
     // ==========================
 
-    $usernameCheck = mysqli_query(
-        $conn,
-        "SELECT id
+    $usernameCheck = mysqli_query($conn, "SELECT id
         FROM users
         WHERE username = '$usernameEscaped'"
     );
@@ -187,24 +135,15 @@
     // CHECK EXISTING DEPARTMENT HEAD ACCOUNT
     // ==========================
 
-    $headAccountCheck = mysqli_query(
-        $conn,
-        "SELECT id
+    $headAccountCheck = mysqli_query($conn, "SELECT id
         FROM users
         WHERE fullname = '$fullnameEscaped'
         AND role = 'Department Head'"
     );
 
 
-    if (
-        $headAccountCheck &&
-        mysqli_num_rows($headAccountCheck) > 0
-    ) {
-
-        die(
-            "This department head already has an account."
-        );
-
+    if ($headAccountCheck && mysqli_num_rows($headAccountCheck) > 0) {
+        die("This department head already has an account.");
     }
 
 
@@ -212,19 +151,14 @@
     // HASH PASSWORD
     // ==========================
 
-    $hashedPassword = password_hash(
-        $password,
-        PASSWORD_DEFAULT
-    );
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 
     // ==========================
     // CREATE ACCOUNT
     // ==========================
 
-    $insertQuery = mysqli_query(
-        $conn,
-        "INSERT INTO users
+    $insertQuery = mysqli_query($conn, "INSERT INTO users
         (
             employee_id,
             fullname,
@@ -244,17 +178,10 @@
 
 
     if ($insertQuery) {
-
         header("Location: add_department_head.php?success=added");
-
         exit();
-
     }
 
-
-    die(
-        "Failed to create account: "
-        . mysqli_error($conn)
-    );
+    die("Failed to create account: ". mysqli_error($conn));
 
 ?>

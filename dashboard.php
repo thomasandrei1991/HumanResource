@@ -129,20 +129,15 @@
                                 <?php
                                 // Pull the 5 most recent attendance records, joined with
                                 // employees so we get name + department in one query
-                                $attendanceQuery = mysqli_query($conn,
-                                    "SELECT
+                                $attendanceQuery = mysqli_query($conn, "SELECT
                                         attendance.attendance_date,
                                         attendance.time_in,
                                         attendance.status,
                                         employees.firstname,
                                         employees.lastname,
                                         employees.department
-                                    FROM attendance
-                                    INNER JOIN employees
-                                        ON attendance.employee_id = employees.id
-                                    ORDER BY attendance.attendance_date DESC,
-                                             attendance.time_in DESC
-                                    LIMIT 5"
+                                    FROM attendance INNER JOIN employees ON attendance.employee_id = employees.id
+                                    ORDER BY attendance.attendance_date DESC, attendance.time_in DESC LIMIT 5"
                                 );
 
                                 if ($attendanceQuery && mysqli_num_rows($attendanceQuery) > 0):
@@ -328,7 +323,6 @@
 
                                             $firstname = $employee['firstname'];
                                             $lastname = $employee['lastname'];
-
                                             $fullName = $firstname . " " . $lastname;
 
                                             // Generate initials

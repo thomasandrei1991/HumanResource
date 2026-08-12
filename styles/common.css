@@ -178,7 +178,8 @@ body {
 .sidebar-section {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
+  font-size: 10px;
 }
 
 /* Icon Sizing - Standardized for ALL nav icons */
@@ -197,8 +198,8 @@ body {
 .nav-item {
   text-decoration: none;
   color: #cbd5e1;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 5px;
+  font-weight: 300;
   padding: 0 10px;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
@@ -345,6 +346,11 @@ body {
                 filter var(--transition-fast, 0.15s ease);
 }
 
+.form-actions{
+  display: flex;
+  gap: 20px;
+}
+
 /* Ensures SVG or span icons align with text */
 .primary-btn svg,
 .primary-btn span,
@@ -460,6 +466,7 @@ body {
 
 /* Fixed strict sidebar dimensions */
 .sidebar {
+    display: flex;
     width: 260px !important;
     min-width: 260px !important;
     max-width: 260px !important;
@@ -749,7 +756,10 @@ body {
 .input-group {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
+
 
 .input-group label {
   margin-bottom: 6px;
