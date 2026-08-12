@@ -6,23 +6,38 @@ if (session_status() === PHP_SESSION_NONE) {
 $currentPage = basename($_SERVER['PHP_SELF']);
 $userRole = $_SESSION['role'] ?? '';
 
-// Role Checks
+/* ==========================================================
+   ROLE CHECKS
+   ========================================================== */
+
 $isAdmin = ($userRole === 'Admin');
 $isHR = ($userRole === 'HR');
 $isAdminOrHR = ($isAdmin || $isHR);
+$isEmployee = ($userRole === 'Employee');
+$isDepartmentHead = ($userRole === 'Department Head');
 
-// Determine Dashboard Link dynamically
+
+/* ==========================================================
+   DASHBOARD LINK
+   ========================================================== */
+
 $dashboardLink = 'dashboard.php';
-if ($userRole === 'Employee') {
+
+if ($isEmployee) {
     $dashboardLink = 'employee_dashboard.php';
-} elseif ($userRole === 'Department Head') {
+} elseif ($isDepartmentHead) {
     $dashboardLink = 'department_head_dashboard.php';
 }
 
-// Helper function to check active state cleanly
+
+/* ==========================================================
+   ACTIVE PAGE HELPER
+   ========================================================== */
+
 $isActive = function ($page) use ($currentPage) {
     return $currentPage === basename($page) ? 'active' : '';
 };
+
 ?>
 
 <aside class="sidebar">
@@ -30,104 +45,248 @@ $isActive = function ($page) use ($currentPage) {
     <!-- BRAND -->
     <div class="brand">
         <div class="brand-icon">HR</div>
+
         <div class="brand-text">
             <h2>HR Portal</h2>
             <p>Human Resource</p>
         </div>
     </div>
 
+
     <!-- MAIN NAVIGATION -->
     <nav class="sidebar-nav">
 
         <!-- DASHBOARD -->
-        <a href="<?php echo htmlspecialchars($dashboardLink); ?>" class="nav-item <?php echo $isActive($dashboardLink); ?>">
-            <img src="images/dashboard.png" alt="" aria-hidden="true">
+        <a
+            href="<?php echo htmlspecialchars($dashboardLink); ?>"
+            class="nav-item <?php echo $isActive($dashboardLink); ?>"
+        >
+            <img
+                src="images/dashboard.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Dashboard</span>
         </a>
 
+
         <!-- ADMIN / HR ONLY -->
         <?php if ($isAdminOrHR): ?>
+
             <!-- EMPLOYEES -->
-            <a href="employee.php" class="nav-item <?php echo $isActive('employee.php'); ?>">
-                <img src="images/users.png" alt="" aria-hidden="true">
+            <a
+                href="employee.php"
+                class="nav-item <?php echo $isActive('employee.php'); ?>"
+            >
+                <img
+                    src="images/users.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Employee</span>
             </a>
 
+
             <!-- DEPARTMENTS -->
-            <a href="departments.php" class="nav-item <?php echo $isActive('departments.php'); ?>">
-                <img src="images/building.png" alt="" aria-hidden="true">
+            <a
+                href="departments.php"
+                class="nav-item <?php echo $isActive('departments.php'); ?>"
+            >
+                <img
+                    src="images/building.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Departments</span>
             </a>
 
+
             <!-- DEPARTMENT HEADS -->
-            <a href="department_heads.php" class="nav-item <?php echo $isActive('department_heads.php'); ?>">
-                <img src="images/building.png" alt="" aria-hidden="true">
+            <a
+                href="department_heads.php"
+                class="nav-item <?php echo $isActive('department_heads.php'); ?>"
+            >
+                <img
+                    src="images/building.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Department Heads</span>
             </a>
+
         <?php endif; ?>
 
+
         <!-- ATTENDANCE -->
-        <a href="attendance.php" class="nav-item <?php echo $isActive('attendance.php'); ?>">
-            <img src="images/clock.png" alt="" aria-hidden="true">
+        <a
+            href="attendance.php"
+            class="nav-item <?php echo $isActive('attendance.php'); ?>"
+        >
+            <img
+                src="images/clock.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Attendance</span>
         </a>
 
+
+        <!-- MY SCHEDULE - EMPLOYEE ONLY -->
+        <?php if ($isEmployee): ?>
+
+            <a
+                href="my_schedule.php"
+                class="nav-item <?php echo $isActive('my_schedule.php'); ?>"
+            >
+                <img
+                    src="images/calendar-month.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
+                <span>My Schedule</span>
+            </a>
+
+        <?php endif; ?>
+
+
         <!-- LEAVE MANAGEMENT -->
-        <a href="leave_management.php" class="nav-item <?php echo $isActive('leave_management.php'); ?>">
-            <img src="images/calendar-month.png" alt="" aria-hidden="true">
+        <a
+            href="leave_management.php"
+            class="nav-item <?php echo $isActive('leave_management.php'); ?>"
+        >
+            <img
+                src="images/calendar-month.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Leave Management</span>
         </a>
 
+
         <!-- PAYROLL -->
-        <a href="payroll.php" class="nav-item <?php echo $isActive('payroll.php'); ?>">
-            <img src="images/currency-peso.png" alt="" aria-hidden="true">
+        <a
+            href="payroll.php"
+            class="nav-item <?php echo $isActive('payroll.php'); ?>"
+        >
+            <img
+                src="images/currency-peso.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Payroll</span>
         </a>
 
-        <!-- RECRUITMENT -->
+
+        <!-- RECRUITMENT - ADMIN / HR ONLY -->
         <?php if ($isAdminOrHR): ?>
-            <a href="recruitment.php" class="nav-item <?php echo $isActive('recruitment.php'); ?>">
-                <img src="images/user-plus.png" alt="" aria-hidden="true">
+
+            <a
+                href="recruitment.php"
+                class="nav-item <?php echo $isActive('recruitment.php'); ?>"
+            >
+                <img
+                    src="images/user-plus.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Recruitment</span>
             </a>
+
         <?php endif; ?>
 
+
         <!-- PERFORMANCE -->
-        <a href="performance.php" class="nav-item <?php echo $isActive('performance.php'); ?>">
-            <img src="images/chart-line.png" alt="" aria-hidden="true">
+        <a
+            href="performance.php"
+            class="nav-item <?php echo $isActive('performance.php'); ?>"
+        >
+            <img
+                src="images/chart-line.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Performance</span>
         </a>
 
     </nav>
 
+
     <!-- REPORTS SECTION -->
     <?php if ($isAdminOrHR): ?>
+
         <div class="sidebar-section">
+
             <h3>Reports</h3>
-            <a href="reports.php" class="nav-item <?php echo $isActive('reports.php'); ?>">
-                <img src="images/reports.png" alt="" aria-hidden="true">
+
+            <a
+                href="reports.php"
+                class="nav-item <?php echo $isActive('reports.php'); ?>"
+            >
+                <img
+                    src="images/reports.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Reports</span>
             </a>
+
         </div>
+
     <?php endif; ?>
+
 
     <!-- SETTINGS SECTION -->
     <?php if ($isAdmin): ?>
+
         <div class="sidebar-section">
+
             <h3>Settings</h3>
-            <a href="settings.php" class="nav-item <?php echo $isActive('settings.php'); ?>">
-                <img src="images/settings.png" alt="" aria-hidden="true">
+
+            <a
+                href="settings.php"
+                class="nav-item <?php echo $isActive('settings.php'); ?>"
+            >
+                <img
+                    src="images/settings.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
                 <span>Settings</span>
             </a>
+
         </div>
+
     <?php endif; ?>
+
 
     <!-- LOGOUT -->
     <div class="sidebar-footer">
-        <a href="logout.php" class="nav-item logout">
-            <img src="images/logout.png" alt="" aria-hidden="true">
+
+        <a
+            href="logout.php"
+            class="nav-item logout"
+        >
+            <img
+                src="images/logout.png"
+                alt=""
+                aria-hidden="true"
+            >
+
             <span>Logout</span>
         </a>
+
     </div>
 
 </aside>

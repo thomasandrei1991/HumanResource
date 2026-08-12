@@ -1,0 +1,261 @@
+/* ==========================================================================
+   My Schedule Page
+   ========================================================================== */
+
+.my-schedule-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+
+/* ==========================================================================
+   Page Header
+   ========================================================================== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.page-kicker {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin: 0 0 0.25rem 0;
+}
+
+.page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+
+/* ==========================================================================
+   Employee Information Card
+   ========================================================================== */
+
+.employee-info-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 1.5rem;
+
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+
+/* Employee Avatar */
+
+.employee-avatar {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+
+    color: #ffffff;
+
+    border-radius: 50%;
+
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+
+/* Employee Details */
+
+.employee-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.employee-details h2 {
+    margin: 0 0 0.25rem 0;
+
+    font-size: 1.25rem;
+    font-weight: 700;
+
+    color: #111827;
+}
+
+.employee-details p {
+    margin: 0;
+
+    font-size: 0.875rem;
+
+    color: #6b7280;
+}
+
+
+/* ==========================================================================
+   Schedule Panel
+   ========================================================================== */
+
+.employee-panel {
+    background-color: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 1.5rem;
+
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Panel Header */
+
+.panel-header {
+    margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+
+    color: #111827;
+
+    margin: 0;
+}
+
+
+/* ==========================================================================
+   Table
+   ========================================================================== */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dashboard-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 0.875rem;
+
+    text-align: left;
+}
+
+
+/* Table Header */
+
+.dashboard-table th {
+    background-color: #f9fafb;
+
+    color: #4b5563;
+
+    font-weight: 600;
+
+    padding: 0.875rem 1rem;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    white-space: nowrap;
+}
+
+
+/* Table Body */
+
+.dashboard-table td {
+    padding: 0.95rem 1rem;
+
+    color: #1f2937;
+
+    border-bottom: 1px solid #f3f4f6;
+
+    white-space: nowrap;
+}
+
+
+/* Hover */
+
+.dashboard-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+
+/* ==========================================================================
+   Empty Schedule
+   ========================================================================== */
+
+.dashboard-table td[colspan] {
+    color: #6b7280;
+
+    padding: 2rem 1rem;
+}
+
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+
+    .employee-info-card {
+        align-items: flex-start;
+    }
+
+    .employee-avatar {
+        width: 54px;
+        height: 54px;
+
+        font-size: 1rem;
+    }
+
+    .employee-details h2 {
+        font-size: 1.1rem;
+    }
+
+    .employee-panel {
+        padding: 1rem;
+    }
+
+    .dashboard-table {
+        min-width: 700px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .employee-info-card {
+        flex-direction: column;
+        align-items: center;
+
+        text-align: center;
+    }
+
+    .employee-details {
+        align-items: center;
+    }
+
+}
