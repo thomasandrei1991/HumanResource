@@ -82,6 +82,11 @@
     display: none !important;
 }
 
+.action-buttons{
+    display: flex;
+    gap: 10px;
+}
+
 @media (max-width: 768px) {
     .employee-form-panel form {
         grid-template-columns: 1fr;

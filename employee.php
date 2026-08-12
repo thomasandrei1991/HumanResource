@@ -370,13 +370,11 @@ if ($isAdminOrHR) {
                 <!-- =====================================================
                      EMPLOYEE TABLE
                 ====================================================== -->
+                <div class="panel-header">
+                    <h3>Employee Directory</h3>
+                </div>
                 <div class="employee-panel">
-                    <div class="panel-header">
-                        <h2>Employee Directory</h2>
-                    </div>
-
                     <table class="dashboard-table employee-table">
-
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -459,15 +457,16 @@ if ($isAdminOrHR) {
                                         <!-- ACTIONS -->
                                         <?php if ($isAdminOrHR): ?>
 
-                                            <td>
+                                            <td class="action-buttons">
 
                                                 <!-- EDIT -->
-                                                <a
-                                                    href="employee.php?edit_id=<?php echo $employee['id']; ?>"
-                                                    class="edit-btn"
+                                                <button 
+                                                    type="button" 
+                                                    class="edit-btn" 
+                                                    onclick="window.location.href='employee.php?edit_id=<?php echo $employee['id']; ?>'"
                                                 >
                                                     Edit
-                                                </a>
+                                                </button>
 
 
                                                 <!-- DELETE -->

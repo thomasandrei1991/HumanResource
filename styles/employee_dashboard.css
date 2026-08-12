@@ -1,0 +1,76 @@
+/**** Panel Header + Content Alignment ****/
+.employee-dashboard-panel .panel-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.employee-dashboard-panel .panel-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Give the same horizontal padding to everything below the header */
+.employee-dashboard-panel .attendance-actions,
+.employee-dashboard-panel .attendance-status,
+.employee-dashboard-panel > p {
+  padding: 16px 24px;
+}
+
+.employee-dashboard-panel .attendance-actions {
+  padding-bottom: 0;
+}
+
+.employee-dashboard-panel > p {
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.employee-dashboard-panel > p:last-of-type {
+  padding-bottom: 20px;
+}
+
+/* Table header/cells already have their own padding (10px/12px) —
+   bump them to 24px so they match the panel-header padding above */
+.employee-dashboard-panel .dashboard-table thead th,
+.employee-dashboard-panel .dashboard-table tbody td {
+  padding: 12px 24px;
+}
+
+.employee-dashboard-panel .dashboard-table {
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.employee-dashboard-panel,
+.dashboard-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 0px;
+  box-shadow: var(--shadow-xs);
+  overflow-y: auto;
+}
+
+/**** Scrollable table with sticky header ****/
+.employee-dashboard-panel:has(.table-scroll) {
+  overflow: visible;
+}
+
+.table-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.table-scroll .dashboard-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+}
+
+.attendance-actions{
+    display: flex;
+    gap: 10px;
+}

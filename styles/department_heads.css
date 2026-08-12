@@ -99,3 +99,8 @@
     outline: 2px solid #60a5fa;
     outline-offset: 2px;
 }
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}

@@ -361,13 +361,10 @@
                             </div>
 
                             <!-- ATTENDANCE TABLE -->
-
+                            <div class="panel-header">
+                                <h2>Today's Attendance</h2>
+                            </div>
                             <div class="employee-panel">
-
-                                <div class="panel-header">
-                                    <h2>Today's Attendance</h2>
-                                </div>
-
                                 <table class="dashboard-table employee-table">
                                     <thead>
                                         <tr>

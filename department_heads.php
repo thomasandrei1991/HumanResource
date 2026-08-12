@@ -81,7 +81,7 @@
 
                 <div class="employee-panel">
                     <div class="panel-header">
-                        <h2>Department Head Directory</h2>
+                        
                     </div>
 
                     <table class="dashboard-table employee-table">

@@ -164,12 +164,12 @@
 
                     </div>
                     <!-- Department Table -->
+                     <div class="panel-header">
+                        <h2>Department Directory</h2>
+                    </div>
                     <div class="employee-panel">
-                        <div class="panel-header">
-                            <h2>Department Directory</h2>
-                        </div>
                         <table class="dashboard-table employee-table">
-                            <thead>
+                            <thead id="thead">
                                 <tr>
                                     <th>Department</th>
                                     <th>Department Head</th>

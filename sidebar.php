@@ -121,19 +121,27 @@ $isActive = function ($page) use ($currentPage) {
         <?php endif; ?>
 
 
-        <!-- ATTENDANCE -->
-        <a
-            href="attendance.php"
-            class="nav-item <?php echo $isActive('attendance.php'); ?>"
-        >
-            <img
-                src="images/clock.png"
-                alt=""
-                aria-hidden="true"
+        <!-- MY ATTENDANCE -->
+        <?php if ($userRole === 'Employee'): ?>
+
+            <a
+                href="my_history.php"
+                class="nav-item <?php echo $isActive('my_history.php'); ?>"
             >
 
-            <span>Attendance</span>
-        </a>
+                <img
+                    src="images/clock.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
+                <span>
+                    My Attendance
+                </span>
+
+            </a>
+
+        <?php endif; ?>
 
 
         <!-- MY SCHEDULE - EMPLOYEE ONLY -->
