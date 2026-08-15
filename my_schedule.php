@@ -1,128 +1,128 @@
 <?php
-session_start();
-require_once 'database.php';
+    session_start();
+    require_once 'database.php';
 
-// ==========================================================
-// LOGIN CHECK
-// ==========================================================
+    // ==========================================================
+    // LOGIN CHECK
+    // ==========================================================
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// ==========================================================
-// CURRENT USER
-// ==========================================================
-
-$userId = intval($_SESSION['user_id']);
-$userRole = $_SESSION['role'] ?? '';
-
-// ==========================================================
-// GET EMPLOYEE ID OF LOGGED-IN USER
-// ==========================================================
-
-$employeeId = null;
-
-$userStmt = mysqli_prepare(
-    $conn,
-    "SELECT employee_id
-     FROM users
-     WHERE id = ?
-     LIMIT 1"
-);
-
-if ($userStmt) {
-
-    mysqli_stmt_bind_param($userStmt, "i", $userId);
-    mysqli_stmt_execute($userStmt);
-
-    $userResult = mysqli_stmt_get_result($userStmt);
-
-    if ($userData = mysqli_fetch_assoc($userResult)) {
-        $employeeId = $userData['employee_id'];
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
     }
 
-    mysqli_stmt_close($userStmt);
-}
+    // ==========================================================
+    // CURRENT USER
+    // ==========================================================
 
-// ==========================================================
-// GET EMPLOYEE INFORMATION
-// ==========================================================
+    $userId = intval($_SESSION['user_id']);
+    $userRole = $_SESSION['role'] ?? '';
 
-$employee = null;
+    // ==========================================================
+    // GET EMPLOYEE ID OF LOGGED-IN USER
+    // ==========================================================
 
-if ($employeeId) {
+    $employeeId = null;
 
-    $employeeStmt = mysqli_prepare(
+    $userStmt = mysqli_prepare(
         $conn,
-        "SELECT
-            id,
-            employee_id,
-            firstname,
-            lastname,
-            department,
-            position
-         FROM employees
-         WHERE id = ?
-         LIMIT 1"
+        "SELECT employee_id
+        FROM users
+        WHERE id = ?
+        LIMIT 1"
     );
 
-    if ($employeeStmt) {
+    if ($userStmt) {
 
-        mysqli_stmt_bind_param($employeeStmt, "i", $employeeId);
-        mysqli_stmt_execute($employeeStmt);
+        mysqli_stmt_bind_param($userStmt, "i", $userId);
+        mysqli_stmt_execute($userStmt);
 
-        $employeeResult = mysqli_stmt_get_result($employeeStmt);
+        $userResult = mysqli_stmt_get_result($userStmt);
 
-        if ($employeeResult) {
-            $employee = mysqli_fetch_assoc($employeeResult);
+        if ($userData = mysqli_fetch_assoc($userResult)) {
+            $employeeId = $userData['employee_id'];
         }
 
-        mysqli_stmt_close($employeeStmt);
+        mysqli_stmt_close($userStmt);
     }
-}
 
-// ==========================================================
-// GET EMPLOYEE SCHEDULES
-// ==========================================================
+    // ==========================================================
+    // GET EMPLOYEE INFORMATION
+    // ==========================================================
 
-$schedules = [];
+    $employee = null;
 
-if ($employeeId) {
+    if ($employeeId) {
 
-    $scheduleStmt = mysqli_prepare(
-        $conn,
-        "SELECT
-            id,
-            schedule_date,
-            time_in,
-            time_out,
-            break_start,
-            break_end,
-            created_at
-         FROM schedules
-         WHERE employee_id = ?
-         ORDER BY schedule_date ASC"
-    );
+        $employeeStmt = mysqli_prepare(
+            $conn,
+            "SELECT
+                id,
+                employee_id,
+                firstname,
+                lastname,
+                department,
+                position
+            FROM employees
+            WHERE id = ?
+            LIMIT 1"
+        );
 
-    if ($scheduleStmt) {
+        if ($employeeStmt) {
 
-        mysqli_stmt_bind_param($scheduleStmt, "i", $employeeId);
-        mysqli_stmt_execute($scheduleStmt);
+            mysqli_stmt_bind_param($employeeStmt, "i", $employeeId);
+            mysqli_stmt_execute($employeeStmt);
 
-        $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
+            $employeeResult = mysqli_stmt_get_result($employeeStmt);
 
-        if ($scheduleResult) {
-
-            while ($row = mysqli_fetch_assoc($scheduleResult)) {
-                $schedules[] = $row;
+            if ($employeeResult) {
+                $employee = mysqli_fetch_assoc($employeeResult);
             }
-        }
 
-        mysqli_stmt_close($scheduleStmt);
+            mysqli_stmt_close($employeeStmt);
+        }
     }
-}
+
+    // ==========================================================
+    // GET EMPLOYEE SCHEDULES
+    // ==========================================================
+
+    $schedules = [];
+
+    if ($employeeId) {
+
+        $scheduleStmt = mysqli_prepare(
+            $conn,
+            "SELECT
+                id,
+                schedule_date,
+                time_in,
+                time_out,
+                break_start,
+                break_end,
+                created_at
+            FROM schedules
+            WHERE employee_id = ?
+            ORDER BY schedule_date ASC"
+        );
+
+        if ($scheduleStmt) {
+
+            mysqli_stmt_bind_param($scheduleStmt, "i", $employeeId);
+            mysqli_stmt_execute($scheduleStmt);
+
+            $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
+
+            if ($scheduleResult) {
+
+                while ($row = mysqli_fetch_assoc($scheduleResult)) {
+                    $schedules[] = $row;
+                }
+            }
+
+            mysqli_stmt_close($scheduleStmt);
+        }
+    }
 
 ?>
 

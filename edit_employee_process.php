@@ -3,7 +3,6 @@
     include "database.php";
 
     $id = $_POST['id'];
-
     $firstname = $_POST['firstname'];
     $lastname = $_POST['lastname'];
     $employee_id = $_POST['employee_id'];
@@ -15,10 +14,7 @@
     $salary = $_POST['salary'];
     $employment_status = $_POST['employment_status'];
 
-    $check = "SELECT * FROM employees
-            WHERE employee_id='$employee_id'
-            AND id != '$id'";
-
+    $check = "SELECT * FROM employees WHERE employee_id='$employee_id' AND id != '$id'";
     $result = mysqli_query($conn,$check);
 
     if(mysqli_num_rows($result) > 0){
@@ -36,17 +32,13 @@
     position='$position',
     date_hired='$date_hired',
     salary='$salary',
-    employment_status='$employment_status'
-    WHERE id='$id'";
+    employment_status='$employment_status' WHERE id='$id'";
 
     if(mysqli_query($conn,$sql)){
-
         header("Location: employee.php");
         exit();
 
     }else{
-
         die("SQL Error: ".mysqli_error($conn));
-
     }
 ?>

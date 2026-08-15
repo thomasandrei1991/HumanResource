@@ -1,163 +1,163 @@
 <?php
 
-session_start();
+    session_start();
 
-require_once 'database.php';
-
-
-// ==========================
-// LOGIN CHECK
-// ==========================
-
-if (!isset($_SESSION['user_id'])) {
-
-    header("Location: login.php");
-    exit();
-
-}
+    require_once 'database.php';
 
 
-// ==========================
-// EMPLOYEE CHECK
-// ==========================
+    // ==========================
+    // LOGIN CHECK
+    // ==========================
 
-if (($_SESSION['role'] ?? '') !== 'Employee') {
+    if (!isset($_SESSION['user_id'])) {
 
-    header("Location: dashboard.php");
-    exit();
+        header("Location: login.php");
+        exit();
 
-}
+    }
 
 
-// ==========================
-// GET EMPLOYEE ID
-// ==========================
+    // ==========================
+    // EMPLOYEE CHECK
+    // ==========================
 
-$employeeId = intval(
-    $_SESSION['employee_id'] ?? 0
-);
+    if (($_SESSION['role'] ?? '') !== 'Employee') {
 
-if ($employeeId <= 0) {
+        header("Location: dashboard.php");
+        exit();
 
-    header(
-        "Location: employee_dashboard.php?error=employee"
+    }
+
+
+    // ==========================
+    // GET EMPLOYEE ID
+    // ==========================
+
+    $employeeId = intval(
+        $_SESSION['employee_id'] ?? 0
     );
 
-    exit();
+    if ($employeeId <= 0) {
 
-}
+        header(
+            "Location: employee_dashboard.php?error=employee"
+        );
 
+        exit();
 
-// ==========================
-// FIND TODAY'S ATTENDANCE
-// ==========================
-
-$checkQuery = mysqli_prepare(
-    $conn,
-    "SELECT id, time_in, time_out
-     FROM attendance
-     WHERE employee_id = ?
-     AND attendance_date = CURDATE()
-     LIMIT 1"
-);
-
-mysqli_stmt_bind_param(
-    $checkQuery,
-    "i",
-    $employeeId
-);
-
-mysqli_stmt_execute($checkQuery);
-
-$result = mysqli_stmt_get_result($checkQuery);
+    }
 
 
-// ==========================
-// CHECK RECORD
-// ==========================
+    // ==========================
+    // FIND TODAY'S ATTENDANCE
+    // ==========================
 
-if (mysqli_num_rows($result) === 0) {
-
-    header(
-        "Location: employee_dashboard.php?error=no_time_in"
+    $checkQuery = mysqli_prepare(
+        $conn,
+        "SELECT id, time_in, time_out
+        FROM attendance
+        WHERE employee_id = ?
+        AND attendance_date = CURDATE()
+        LIMIT 1"
     );
 
-    exit();
-
-}
-
-
-$attendance = mysqli_fetch_assoc($result);
-
-
-// ==========================
-// CHECK TIME IN
-// ==========================
-
-if (empty($attendance['time_in'])) {
-
-    header(
-        "Location: employee_dashboard.php?error=no_time_in"
+    mysqli_stmt_bind_param(
+        $checkQuery,
+        "i",
+        $employeeId
     );
 
-    exit();
+    mysqli_stmt_execute($checkQuery);
 
-}
+    $result = mysqli_stmt_get_result($checkQuery);
 
 
-// ==========================
-// CHECK ALREADY TIMED OUT
-// ==========================
+    // ==========================
+    // CHECK RECORD
+    // ==========================
 
-if (!empty($attendance['time_out'])) {
+    if (mysqli_num_rows($result) === 0) {
 
-    header(
-        "Location: employee_dashboard.php?error=already_out"
+        header(
+            "Location: employee_dashboard.php?error=no_time_in"
+        );
+
+        exit();
+
+    }
+
+
+    $attendance = mysqli_fetch_assoc($result);
+
+
+    // ==========================
+    // CHECK TIME IN
+    // ==========================
+
+    if (empty($attendance['time_in'])) {
+
+        header(
+            "Location: employee_dashboard.php?error=no_time_in"
+        );
+
+        exit();
+
+    }
+
+
+    // ==========================
+    // CHECK ALREADY TIMED OUT
+    // ==========================
+
+    if (!empty($attendance['time_out'])) {
+
+        header(
+            "Location: employee_dashboard.php?error=already_out"
+        );
+
+        exit();
+
+    }
+
+
+    // ==========================
+    // UPDATE TIME OUT
+    // ==========================
+
+    $updateQuery = mysqli_prepare(
+        $conn,
+        "UPDATE attendance
+        SET time_out = CURTIME()
+        WHERE id = ?"
     );
 
-    exit();
-
-}
-
-
-// ==========================
-// UPDATE TIME OUT
-// ==========================
-
-$updateQuery = mysqli_prepare(
-    $conn,
-    "UPDATE attendance
-     SET time_out = CURTIME()
-     WHERE id = ?"
-);
-
-mysqli_stmt_bind_param(
-    $updateQuery,
-    "i",
-    $attendance['id']
-);
-
-
-// ==========================
-// SAVE
-// ==========================
-
-if (mysqli_stmt_execute($updateQuery)) {
-
-    header(
-        "Location: employee_dashboard.php?success=time_out"
+    mysqli_stmt_bind_param(
+        $updateQuery,
+        "i",
+        $attendance['id']
     );
 
-    exit();
 
-} else {
+    // ==========================
+    // SAVE
+    // ==========================
 
-    header(
-        "Location: employee_dashboard.php?error=failed"
-    );
+    if (mysqli_stmt_execute($updateQuery)) {
 
-    exit();
+        header(
+            "Location: employee_dashboard.php?success=time_out"
+        );
 
-}
+        exit();
+
+    } else {
+
+        header(
+            "Location: employee_dashboard.php?error=failed"
+        );
+
+        exit();
+
+    }
 
 ?>

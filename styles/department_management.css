@@ -1,0 +1,360 @@
+/* ======================================================
+    DEPARTMENT MANAGEMENT PAGE
+    ====================================================== */
+
+.department-management-page {
+    width: 100%;
+}
+
+
+.department-management-header {
+    margin-bottom: 1.5rem;
+}
+
+
+.department-management-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #111827;
+}
+
+
+.department-management-header p {
+    margin: 0.5rem 0 0;
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+
+/* ======================================================
+    MANAGEMENT CARD
+    ====================================================== */
+
+.management-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.75rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+
+.management-panel-description {
+    margin-bottom: 1.5rem;
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+
+.management-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+
+.management-card {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 12px;
+    min-height: 155px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.management-card:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+.management-card.active {
+    background: #eff6ff;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+
+.management-card img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    margin-bottom: 0.75rem;
+}
+
+
+.management-card span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+
+.management-card.active span {
+    color: #2563eb;
+}
+
+
+/* ======================================================
+    CONTENT AREA
+    ====================================================== */
+
+.management-content {
+    margin-top: 1.5rem;
+}
+
+
+.management-section {
+    display: none;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.5rem;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+
+.management-section.active {
+    display: block;
+}
+
+
+.management-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.management-section-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: #111827;
+}
+
+
+.management-section-header p {
+    margin: 0.25rem 0 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+
+/* ======================================================
+    TABLE
+    ====================================================== */
+
+.management-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+.management-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+
+.management-table th {
+    background: #f9fafb;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    padding: 0.85rem 1rem;
+
+    text-align: left;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.management-table td {
+    padding: 0.85rem 1rem;
+
+    color: #374151;
+    font-size: 0.875rem;
+
+    border-bottom: 1px solid #f3f4f6;
+}
+
+
+.management-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+
+.empty-row {
+    text-align: center !important;
+    color: #9ca3af !important;
+    padding: 2rem !important;
+}
+
+
+/* ======================================================
+    STATUS BADGES
+    ====================================================== */
+
+.status-badge {
+    display: inline-block;
+
+    padding: 0.3rem 0.7rem;
+
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+
+.status-active,
+.status-present,
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+
+.status-inactive,
+.status-absent,
+.status-rejected,
+.status-denied {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+/* ======================================================
+    RESPONSIVE
+    ====================================================== */
+
+@media (max-width: 1100px) {
+
+    .management-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .management-cards {
+        grid-template-columns: 1fr;
+    }
+
+
+    .management-panel {
+        padding: 1rem;
+    }
+
+
+    .management-section {
+        padding: 1rem;
+    }
+
+}
+
+/* ======================================================
+   SCHEDULE DATE FILTER
+   ====================================================== */
+
+.schedule-date-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+
+.schedule-date-filter label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+
+.schedule-date-filter input {
+    padding: 0.55rem 0.75rem;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #374151;
+
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    cursor: pointer;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.schedule-date-filter input:hover {
+    border-color: #9ca3af;
+}
+
+
+.schedule-date-filter input:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+
+/* ======================================================
+   MOBILE
+   ====================================================== */
+
+@media (max-width: 650px) {
+
+    .management-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .schedule-date-filter {
+        width: 100%;
+    }
+
+    .schedule-date-filter input {
+        width: 100%;
+    }
+
+}

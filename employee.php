@@ -1,279 +1,151 @@
 <?php
 
-session_start();
+    session_start();
 
-require_once 'database.php';
-
-
-// ==========================================================
-// LOGIN CHECK
-// ==========================================================
-
-if (!isset($_SESSION['user_id'])) {
-
-    header("Location: login.php");
-    exit();
-
-}
+    require_once 'database.php';
 
 
-// ==========================================================
-// CURRENT USER
-// ==========================================================
+    // ==========================================================
+    // LOGIN CHECK
+    // ==========================================================
 
-$userId = intval($_SESSION['user_id']);
-
-$userRole = $_SESSION['role'] ?? '';
-
-$employeeId = intval(
-    $_SESSION['employee_id'] ?? 0
-);
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
 
-// ==========================================================
-// ROLE CHECK
-// ==========================================================
+    // ==========================================================
+    // CURRENT USER
+    // ==========================================================
 
-$isAdminOrHR = (
-    $userRole === 'Admin' ||
-    $userRole === 'HR'
-);
-
-$isDepartmentHead = (
-    $userRole === 'Department Head'
-);
+    $userId = intval($_SESSION['user_id']);
+    $userRole = $_SESSION['role'] ?? '';
+    $employeeId = intval($_SESSION['employee_id'] ?? 0);
 
 
-// ==========================================================
-// EMPLOYEE ACCESS
-// ==========================================================
+    // ==========================================================
+    // ROLE CHECK
+    // ==========================================================
 
-if (!$isAdminOrHR && !$isDepartmentHead) {
-
-    header("Location: dashboard.php");
-    exit();
-
-}
+    $isAdminOrHR = ($userRole === 'Admin' || $userRole === 'HR');
+    $isDepartmentHead = ($userRole === 'Department Head');
 
 
-// ==========================================================
-// GET DEPARTMENT HEAD'S DEPARTMENT
-// ==========================================================
+    // ==========================================================
+    // EMPLOYEE ACCESS
+    // ==========================================================
 
-$headDepartment = '';
+    if (!$isAdminOrHR && !$isDepartmentHead) {
+        header("Location: dashboard.php");
+        exit();
+    }
 
-if ($isDepartmentHead) {
+    // ==========================================================
+    // GET DEPARTMENT HEAD'S DEPARTMENT
+    // ==========================================================
 
-    $headName = $_SESSION['fullname'] ?? '';
+    $headDepartment = '';
 
-    $departmentQuery = mysqli_prepare(
-        $conn,
-        "SELECT department_name
-         FROM departments
-         WHERE department_head = ?
-         AND status = 'active'
-         LIMIT 1"
-    );
-
-    mysqli_stmt_bind_param(
-        $departmentQuery,
-        "s",
-        $headName
-    );
-
-    mysqli_stmt_execute(
-        $departmentQuery
-    );
-
-    $departmentResult = mysqli_stmt_get_result(
-        $departmentQuery
-    );
-
-    if (mysqli_num_rows($departmentResult) > 0) {
-
-        $departmentData = mysqli_fetch_assoc(
-            $departmentResult
+    if ($isDepartmentHead) {
+        $headName = $_SESSION['fullname'] ?? '';
+        $departmentQuery = mysqli_prepare($conn, "SELECT department_name
+            FROM departments
+            WHERE department_head = ?
+            AND status = 'active'
+            LIMIT 1"
         );
 
-        $headDepartment =
-            $departmentData['department_name'] ?? '';
+        mysqli_stmt_bind_param($departmentQuery, "s", $headName);
+        mysqli_stmt_execute($departmentQuery);
+        $departmentResult = mysqli_stmt_get_result($departmentQuery);
+
+        if (mysqli_num_rows($departmentResult) > 0) {
+            $departmentData = mysqli_fetch_assoc($departmentResult);
+            $headDepartment = $departmentData['department_name'] ?? '';
+        }
 
     }
 
-}
+    // ==========================================================
+    // GET EMPLOYEES
+    // ==========================================================
+
+    if ($isAdminOrHR) {
+
+        // ======================================================
+        // ADMIN / HR
+        // SEE ALL EMPLOYEES
+        // ======================================================
+
+        $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone, 
+            department, position, date_hired, salary, employment_status
+            FROM employees
+            ORDER BY lastname ASC"
+        );
+        mysqli_stmt_execute($employeesQuery);
+
+    } else {
+
+        // ======================================================
+        // DEPARTMENT HEAD
+        // SEE OWN DEPARTMENT ONLY
+        // ======================================================
+
+        $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone,
+                department, position, date_hired, salary, employment_status
+            FROM employees 
+            WHERE LOWER(department) = LOWER(?)
+            ORDER BY lastname ASC"
+        );
+
+        mysqli_stmt_bind_param($employeesQuery, "s", $headDepartment);
+        mysqli_stmt_execute( $employeesQuery);
+
+    }
 
 
-// ==========================================================
-// GET EMPLOYEES
-// ==========================================================
-
-if ($isAdminOrHR) {
-
-    // ======================================================
-    // ADMIN / HR
-    // SEE ALL EMPLOYEES
-    // ======================================================
-
-    $employeesQuery = mysqli_prepare(
-        $conn,
-        "SELECT
-            id,
-            employee_id,
-            firstname,
-            lastname,
-            email,
-            phone,
-            department,
-            position,
-            date_hired,
-            salary,
-            employment_status
-         FROM employees
-         ORDER BY lastname ASC"
-    );
-
-    mysqli_stmt_execute(
-        $employeesQuery
-    );
-
-} else {
-
-    // ======================================================
-    // DEPARTMENT HEAD
-    // SEE OWN DEPARTMENT ONLY
-    // ======================================================
-
-    $employeesQuery = mysqli_prepare(
-        $conn,
-        "SELECT
-            id,
-            employee_id,
-            firstname,
-            lastname,
-            email,
-            phone,
-            department,
-            position,
-            date_hired,
-            salary,
-            employment_status
-         FROM employees
-         WHERE LOWER(department) = LOWER(?)
-         ORDER BY lastname ASC"
-    );
-
-    mysqli_stmt_bind_param(
-        $employeesQuery,
-        "s",
-        $headDepartment
-    );
-
-    mysqli_stmt_execute(
-        $employeesQuery
-    );
-
-}
+    $employeesResult = mysqli_stmt_get_result($employeesQuery);
 
 
-$employeesResult = mysqli_stmt_get_result(
-    $employeesQuery
-);
+    // ==========================================================
+    // EMPLOYEE SUMMARY COUNTS
+    // ==========================================================
 
+    if ($isAdminOrHR) {
 
-// ==========================================================
-// EMPLOYEE SUMMARY COUNTS
-// ==========================================================
+        // ======================================================
+        // ADMIN / HR
+        // COUNT ALL EMPLOYEES
+        // ======================================================
 
-if ($isAdminOrHR) {
+        $totalEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees"))['total'];
+        $activeEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'"))['total'];
+        $onLeaveEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'"))['total'];
 
-    // ======================================================
-    // ADMIN / HR
-    // COUNT ALL EMPLOYEES
-    // ======================================================
+    } else {
 
-    $totalEmployees = mysqli_fetch_assoc(
-        mysqli_query(
-            $conn,
-            "SELECT COUNT(*) AS total
-             FROM employees"
-        )
-    )['total'];
+        // ======================================================
+        // DEPARTMENT HEAD
+        // COUNT OWN DEPARTMENT ONLY
+        // ======================================================
 
+        $countQuery = mysqli_prepare($conn, "SELECT COUNT(*) AS total,
+                SUM(employment_status = 'Active') AS active,
+                SUM(employment_status = 'On Leave') AS on_leave
+            FROM employees
+            WHERE LOWER(department) = LOWER(?)"
+        );
 
-    $activeEmployees = mysqli_fetch_assoc(
-        mysqli_query(
-            $conn,
-            "SELECT COUNT(*) AS total
-             FROM employees
-             WHERE employment_status = 'Active'"
-        )
-    )['total'];
+        mysqli_stmt_bind_param($countQuery, "s", $headDepartment);
+        mysqli_stmt_execute($countQuery);
+        $countResult = mysqli_stmt_get_result($countQuery);
+        $countData = mysqli_fetch_assoc($countResult);
+        $totalEmployees = $countData['total'] ?? 0;
+        $activeEmployees = $countData['active'] ?? 0;
+        $onLeaveEmployees = $countData['on_leave'] ?? 0;
 
-
-    $onLeaveEmployees = mysqli_fetch_assoc(
-        mysqli_query(
-            $conn,
-            "SELECT COUNT(*) AS total
-             FROM employees
-             WHERE employment_status = 'On Leave'"
-        )
-    )['total'];
-
-
-} else {
-
-    // ======================================================
-    // DEPARTMENT HEAD
-    // COUNT OWN DEPARTMENT ONLY
-    // ======================================================
-
-    $countQuery = mysqli_prepare(
-        $conn,
-        "SELECT
-            COUNT(*) AS total,
-
-            SUM(
-                employment_status = 'Active'
-            ) AS active,
-
-            SUM(
-                employment_status = 'On Leave'
-            ) AS on_leave
-
-         FROM employees
-
-         WHERE LOWER(department) = LOWER(?)"
-    );
-
-    mysqli_stmt_bind_param(
-        $countQuery,
-        "s",
-        $headDepartment
-    );
-
-    mysqli_stmt_execute(
-        $countQuery
-    );
-
-    $countResult = mysqli_stmt_get_result(
-        $countQuery
-    );
-
-    $countData = mysqli_fetch_assoc(
-        $countResult
-    );
-
-
-    $totalEmployees =
-        $countData['total'] ?? 0;
-
-    $activeEmployees =
-        $countData['active'] ?? 0;
-
-    $onLeaveEmployees =
-        $countData['on_leave'] ?? 0;
-
-}
+    }
 
 ?>
 
@@ -296,9 +168,7 @@ if ($isAdminOrHR) {
 >
 
 <div class="dashboard-shell">
-
     <?php include 'sidebar.php'; ?>
-
     <main class="dashboard-main">
         <div class="dashboard-container">
             <div class="employee-container">
@@ -314,13 +184,7 @@ if ($isAdminOrHR) {
 
                     <div class="table-tools">
                         <form class="employee-search-form" action="employee.php" method="GET">
-                            <input
-                                class="search-input"
-                                type="text"
-                                name="search"
-                                placeholder="Search employee..."
-                                value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
-                            >
+                            <input class="search-input" type="text" name="search" placeholder="Search employee..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                             <button class="search-btn" type="submit">Search</button>
                         </form>
                     </div>
@@ -374,7 +238,9 @@ if ($isAdminOrHR) {
                     <h3>Employee Directory</h3>
                 </div>
                 <div class="employee-panel">
+
                     <table class="dashboard-table employee-table">
+
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -389,74 +255,48 @@ if ($isAdminOrHR) {
                         </thead>
 
                         <tbody>
-
                             <?php if (mysqli_num_rows($employeesResult) > 0): ?>
-
                                 <?php while ($employee = mysqli_fetch_assoc($employeesResult)): ?>
-
                                     <tr>
 
                                         <!-- NAME -->
                                         <td>
                                             <div class="employee-name">
-
                                                 <div class="emp-avatar blue-bg">
-
                                                     <?php
-                                                    echo strtoupper(
-                                                        substr($employee['firstname'], 0, 1)
-                                                        .
-                                                        substr($employee['lastname'], 0, 1)
-                                                    );
+                                                        echo strtoupper(substr($employee['firstname'], 0, 1).substr($employee['lastname'], 0, 1));
                                                     ?>
-
                                                 </div>
 
                                                 <?php
-                                                echo htmlspecialchars(
-                                                    $employee['firstname']
-                                                    . ' '
-                                                    . $employee['lastname']
-                                                );
+                                                    echo htmlspecialchars($employee['firstname']. ' '. $employee['lastname']);
                                                 ?>
-
                                             </div>
                                         </td>
-
 
                                         <!-- DEPARTMENT -->
                                         <td>
                                             <?php
-                                            echo htmlspecialchars(
-                                                $employee['department']
-                                            );
+                                                echo htmlspecialchars($employee['department']);
                                             ?>
                                         </td>
-
 
                                         <!-- POSITION -->
                                         <td>
                                             <?php
-                                            echo htmlspecialchars(
-                                                $employee['position']
-                                            );
+                                                echo htmlspecialchars($employee['position']);
                                             ?>
                                         </td>
-
 
                                         <!-- STATUS -->
                                         <td>
                                             <?php
-                                            echo htmlspecialchars(
-                                                $employee['employment_status']
-                                            );
+                                                echo htmlspecialchars($employee['employment_status']);
                                             ?>
                                         </td>
 
-
                                         <!-- ACTIONS -->
                                         <?php if ($isAdminOrHR): ?>
-
                                             <td class="action-buttons">
 
                                                 <!-- EDIT -->
@@ -467,7 +307,6 @@ if ($isAdminOrHR) {
                                                 >
                                                     Edit
                                                 </button>
-
 
                                                 <!-- DELETE -->
                                                 <button
@@ -483,35 +322,21 @@ if ($isAdminOrHR) {
                                                 >
                                                     Delete
                                                 </button>
-
                                             </td>
-
                                         <?php endif; ?>
-
                                     </tr>
-
                                 <?php endwhile; ?>
-
                             <?php else: ?>
 
                                 <tr>
-
-                                    <td
-                                        colspan="<?php echo $isAdminOrHR ? '5' : '4'; ?>"
-                                        style="text-align: center;"
-                                    >
+                                    <td colspan="<?php echo $isAdminOrHR ? '5' : '4'; ?>" style="text-align: center;">
                                         No employees found.
                                     </td>
-
                                 </tr>
-
                             <?php endif; ?>
-
                         </tbody>
-
                     </table>
                 </div>
-
             </div>
         </div>
     </main>
@@ -574,6 +399,5 @@ if ($isAdminOrHR) {
         <button id="closeEmployeeModal" type="button">OK</button>
     </div>
 </div>
-
 </body>
 </html>

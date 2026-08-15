@@ -1,4 +1,5 @@
 <?php
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -12,9 +13,10 @@ $userRole = $_SESSION['role'] ?? '';
 
 $isAdmin = ($userRole === 'Admin');
 $isHR = ($userRole === 'HR');
-$isAdminOrHR = ($isAdmin || $isHR);
 $isEmployee = ($userRole === 'Employee');
 $isDepartmentHead = ($userRole === 'Department Head');
+
+$isAdminOrHR = ($isAdmin || $isHR);
 
 
 /* ==========================================================
@@ -42,25 +44,39 @@ $isActive = function ($page) use ($currentPage) {
 
 <aside class="sidebar">
 
-    <!-- BRAND -->
+    <!-- ======================================================
+         BRAND
+    ======================================================= -->
+
     <div class="brand">
-        <div class="brand-icon">HR</div>
+
+        <div class="brand-icon">
+            HR
+        </div>
 
         <div class="brand-text">
             <h2>HR Portal</h2>
             <p>Human Resource</p>
         </div>
+
     </div>
 
 
-    <!-- MAIN NAVIGATION -->
+    <!-- ======================================================
+         MAIN NAVIGATION
+    ======================================================= -->
+
     <nav class="sidebar-nav">
 
-        <!-- DASHBOARD -->
+        <!-- ==================================================
+             DASHBOARD
+        =================================================== -->
+
         <a
             href="<?php echo htmlspecialchars($dashboardLink); ?>"
             class="nav-item <?php echo $isActive($dashboardLink); ?>"
         >
+
             <img
                 src="images/dashboard.png"
                 alt=""
@@ -68,32 +84,78 @@ $isActive = function ($page) use ($currentPage) {
             >
 
             <span>Dashboard</span>
+
         </a>
 
 
-        <!-- ADMIN / HR ONLY -->
+        <!-- DEPARTMENT MANAGEMENT -->
+        <?php if ($isDepartmentHead): ?>
+
+            <a
+                href="department_management.php"
+                class="nav-item <?php echo $isActive('department_management.php'); ?>"
+            >
+                <img
+                    src="images/building.png"
+                    alt=""
+                    aria-hidden="true"
+                >
+
+                <span>Department Management</span>
+            </a>
+
+        <?php endif; ?>
+        
+        <!-- ADD SCHEDULE FORM -->
+        <?php if ($isAdminOrHR || $isDepartmentHead): ?>
+
+            <a 
+                href="schedule.php" 
+                class="nav-item <?php echo $isActive('schedule_management.php'); ?>"
+            >
+                <img 
+                    src="images/calendar-month.png" 
+                    alt="" 
+                    aria-hidden="true"
+                >
+
+                <span>Schedule Management</span>
+            </a>
+
+        <?php endif; ?>
+
+
+        <!-- ==================================================
+             ADMIN / HR ONLY
+        =================================================== -->
+
         <?php if ($isAdminOrHR): ?>
 
             <!-- EMPLOYEES -->
+
             <a
                 href="employee.php"
                 class="nav-item <?php echo $isActive('employee.php'); ?>"
             >
+
                 <img
                     src="images/users.png"
                     alt=""
                     aria-hidden="true"
                 >
 
-                <span>Employee</span>
+                <span>Employees</span>
+
             </a>
 
 
             <!-- DEPARTMENTS -->
+
             <a
                 href="departments.php"
                 class="nav-item <?php echo $isActive('departments.php'); ?>"
             >
+
                 <img
                     src="images/building.png"
                     alt=""
@@ -101,14 +163,17 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>Departments</span>
+
             </a>
 
 
             <!-- DEPARTMENT HEADS -->
+
             <a
                 href="department_heads.php"
                 class="nav-item <?php echo $isActive('department_heads.php'); ?>"
             >
+
                 <img
                     src="images/building.png"
                     alt=""
@@ -116,13 +181,19 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>Department Heads</span>
+
             </a>
 
         <?php endif; ?>
 
 
-        <!-- MY ATTENDANCE -->
-        <?php if ($userRole === 'Employee'): ?>
+        <!-- ==================================================
+             EMPLOYEE ONLY
+        =================================================== -->
+
+        <?php if ($isEmployee): ?>
+
+            <!-- MY ATTENDANCE -->
 
             <a
                 href="my_history.php"
@@ -135,22 +206,18 @@ $isActive = function ($page) use ($currentPage) {
                     aria-hidden="true"
                 >
 
-                <span>
-                    My Attendance
-                </span>
+                <span>My Attendance</span>
 
             </a>
 
-        <?php endif; ?>
 
-
-        <!-- MY SCHEDULE - EMPLOYEE ONLY -->
-        <?php if ($isEmployee): ?>
+            <!-- MY SCHEDULE -->
 
             <a
                 href="my_schedule.php"
                 class="nav-item <?php echo $isActive('my_schedule.php'); ?>"
             >
+
                 <img
                     src="images/calendar-month.png"
                     alt=""
@@ -158,16 +225,21 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>My Schedule</span>
+
             </a>
 
         <?php endif; ?>
 
 
-        <!-- LEAVE MANAGEMENT -->
+        <!-- ==================================================
+             LEAVE MANAGEMENT
+        =================================================== -->
+
         <a
             href="leave_management.php"
             class="nav-item <?php echo $isActive('leave_management.php'); ?>"
         >
+
             <img
                 src="images/calendar-month.png"
                 alt=""
@@ -175,14 +247,19 @@ $isActive = function ($page) use ($currentPage) {
             >
 
             <span>Leave Management</span>
+
         </a>
 
 
-        <!-- PAYROLL -->
+        <!-- ==================================================
+             PAYROLL
+        =================================================== -->
+
         <a
             href="payroll.php"
             class="nav-item <?php echo $isActive('payroll.php'); ?>"
         >
+
             <img
                 src="images/currency-peso.png"
                 alt=""
@@ -190,16 +267,22 @@ $isActive = function ($page) use ($currentPage) {
             >
 
             <span>Payroll</span>
+
         </a>
 
 
-        <!-- RECRUITMENT - ADMIN / HR ONLY -->
+        <!-- ==================================================
+             RECRUITMENT
+             ADMIN / HR ONLY
+        =================================================== -->
+
         <?php if ($isAdminOrHR): ?>
 
             <a
                 href="recruitment.php"
                 class="nav-item <?php echo $isActive('recruitment.php'); ?>"
             >
+
                 <img
                     src="images/user-plus.png"
                     alt=""
@@ -207,16 +290,21 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>Recruitment</span>
+
             </a>
 
         <?php endif; ?>
 
 
-        <!-- PERFORMANCE -->
+        <!-- ==================================================
+             PERFORMANCE
+        =================================================== -->
+
         <a
             href="performance.php"
             class="nav-item <?php echo $isActive('performance.php'); ?>"
         >
+
             <img
                 src="images/chart-line.png"
                 alt=""
@@ -224,12 +312,17 @@ $isActive = function ($page) use ($currentPage) {
             >
 
             <span>Performance</span>
+
         </a>
 
     </nav>
 
 
-    <!-- REPORTS SECTION -->
+    <!-- ======================================================
+         REPORTS
+         ADMIN / HR ONLY
+    ======================================================= -->
+
     <?php if ($isAdminOrHR): ?>
 
         <div class="sidebar-section">
@@ -240,6 +333,7 @@ $isActive = function ($page) use ($currentPage) {
                 href="reports.php"
                 class="nav-item <?php echo $isActive('reports.php'); ?>"
             >
+
                 <img
                     src="images/reports.png"
                     alt=""
@@ -247,6 +341,7 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>Reports</span>
+
             </a>
 
         </div>
@@ -254,7 +349,11 @@ $isActive = function ($page) use ($currentPage) {
     <?php endif; ?>
 
 
-    <!-- SETTINGS SECTION -->
+    <!-- ======================================================
+         SETTINGS
+         ADMIN ONLY
+    ======================================================= -->
+
     <?php if ($isAdmin): ?>
 
         <div class="sidebar-section">
@@ -265,6 +364,7 @@ $isActive = function ($page) use ($currentPage) {
                 href="settings.php"
                 class="nav-item <?php echo $isActive('settings.php'); ?>"
             >
+
                 <img
                     src="images/settings.png"
                     alt=""
@@ -272,6 +372,7 @@ $isActive = function ($page) use ($currentPage) {
                 >
 
                 <span>Settings</span>
+
             </a>
 
         </div>
@@ -279,13 +380,17 @@ $isActive = function ($page) use ($currentPage) {
     <?php endif; ?>
 
 
-    <!-- LOGOUT -->
+    <!-- ======================================================
+         LOGOUT
+    ======================================================= -->
+
     <div class="sidebar-footer">
 
         <a
             href="logout.php"
             class="nav-item logout"
         >
+
             <img
                 src="images/logout.png"
                 alt=""
@@ -293,6 +398,7 @@ $isActive = function ($page) use ($currentPage) {
             >
 
             <span>Logout</span>
+
         </a>
 
     </div>

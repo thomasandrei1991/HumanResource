@@ -221,18 +221,7 @@
                 </div>
             </div>
 
-            <!-- QUICK ACTIONS -->
-            <div class="employee-panel">
-                <div class="panel-header">
-                    <h2>Department Management</h2>
-                </div>
-                <div class="attendance-actions">
-                    <a href="employee.php" class="primary-btn">👥 Employees</a>
-                    <a href="attendance.php" class="primary-btn">🕐 Attendance</a>
-                    <a href="leave_management.php" class="primary-btn">📅 Leave Requests</a>
-                    <a href="schedule.php" class="primary-btn">📋 Schedule</a>
-                </div>
-            </div>
+            
 
             <!-- TODAY'S ATTENDANCE -->
             <div class="employee-panel">

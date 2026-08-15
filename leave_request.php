@@ -102,17 +102,7 @@ $result = mysqli_query($conn, $sql);
         ========================== -->
         <div class="input-group">
             <label for="totalDays">Total Days</label>
-            <input
-                type="number"
-                id="totalDays"
-                name="total_days"
-                class="inputs"
-                placeholder="Automatically calculated"
-                min="1"
-                step="1"
-                readonly
-                required
-            >
+            <input type="number" id="totalDays" name="total_days" class="inputs" placeholder="Automatically calculated" min="1" step="1" readonly required>
         </div>
 
         <!-- ==========================
@@ -120,14 +110,7 @@ $result = mysqli_query($conn, $sql);
         ========================== -->
         <div class="input-group">
             <label for="reason">Reason</label>
-            <textarea
-                id="reason"
-                name="reason"
-                class="inputs"
-                rows="4"
-                placeholder="Briefly explain the reason for this leave request"
-                required
-            ></textarea>
+            <textarea id="reason" name="reason" class="inputs" rows="4" placeholder="Briefly explain the reason for this leave request" required></textarea>
         </div>
 
         <!-- ==========================
@@ -150,7 +133,5 @@ $result = mysqli_query($conn, $sql);
             <!-- type="button" — doesn't submit the form, needs JS to hide the panel -->
             <button type="button" class="primary-btn" id="cancelLeaveBtn">Cancel</button>
         </div>
-
     </form>
-
 </div>
