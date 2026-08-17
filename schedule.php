@@ -222,22 +222,12 @@ if ($isAdminOrHR) {
 
                                 <div class="form-group">
                                     <label for="break_start">Break Start</label>
-                                    <input
-                                        type="time"
-                                        name="break_start"
-                                        id="break_start"
-                                        disabled
-                                    >
+                                    <input type="time" name="break_start" id="break_start" disabled>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="break_end">Break End</label>
-                                    <input
-                                        type="time"
-                                        name="break_end"
-                                        id="break_end"
-                                        disabled
-                                    >
+                                    <input type="time" name="break_end" id="break_end" disabled>
                                 </div>
 
                             </div>
@@ -269,11 +259,9 @@ if ($isAdminOrHR) {
 <!-- SCRIPT -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
     const addScheduleBtn = document.getElementById('addScheduleBtn');
     const cancelScheduleBtn = document.getElementById('cancelScheduleBtn');
     const scheduleFormPanel = document.getElementById('scheduleFormPanel');
-
     const employeeSelect = document.getElementById('employee_id');
     const departmentInput = document.getElementById('department');
     const positionInput = document.getElementById('position');
@@ -284,9 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================
 
     if (addScheduleBtn && scheduleFormPanel) {
-
         addScheduleBtn.addEventListener('click', function () {
-
             scheduleFormPanel.classList.remove('hidden');
 
             // Scroll smoothly to the form
@@ -305,9 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================
 
     if (cancelScheduleBtn && scheduleFormPanel) {
-
         cancelScheduleBtn.addEventListener('click', function () {
-
             scheduleFormPanel.classList.add('hidden');
 
             // Optional: balik sa Schedule Directory
@@ -333,16 +317,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         employeeSelect.addEventListener('change', function () {
 
-            const selectedOption =
-                this.options[this.selectedIndex];
+            const selectedOption = this.options[this.selectedIndex];
 
             if (selectedOption) {
-
-                const department =
-                    selectedOption.getAttribute('data-department') || '';
-
-                const position =
-                    selectedOption.getAttribute('data-position') || '';
+                const department = selectedOption.getAttribute('data-department') || '';
+                const position = selectedOption.getAttribute('data-position') || '';
 
                 if (departmentInput) {
                     departmentInput.value = department;
