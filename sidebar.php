@@ -67,6 +67,16 @@
              DASHBOARD
         =================================================== -->
 
+        <!-- Sidebar Link para sa Profile -->
+        <?php if ($isEmployee): ?>
+
+            <a href="employee_profile.php" class="sidebar-link nav-item" >
+                <img src="images/chart-bar-popular.png" alt="" aria-hidden="true">
+                <span>My Profile</span>
+            </a>
+        
+        <?php endif; ?>
+
         <a href="<?php echo htmlspecialchars($dashboardLink); ?>" class="nav-item <?php echo $isActive($dashboardLink); ?>">
             <img src="images/chart-bar-popular.png" alt="" aria-hidden="true">
             <span>Dashboard</span>
@@ -139,7 +149,7 @@
              LEAVE MANAGEMENT
         =================================================== -->
 
-         <?php if ($isEmployee): ?>
+         <?php if ($isEmployee || $isDepartmentHead): ?>
             <a href="leave_management.php" class="nav-item <?php echo $isActive('leave_management.php'); ?>">
                 <img src="images/calendar-month.png" alt="" aria-hidden="true">
                 <span>Leave Management</span>

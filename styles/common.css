@@ -775,6 +775,22 @@ select.inputs {
   cursor: pointer;
 }
 
+/* ==========================================
+   UNIFIED MODAL BUTTONS STYLING
+   ========================================== */
+
+/* Pagsamahin ang modal-buttons at form-actions para sigurado */
+.modal-content .modal-buttons,
+.modal-content .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Magkatabi sa kanan (Side-by-side) */
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+
 /* ==========================================================
    RESPONSIVE
    ========================================================== */

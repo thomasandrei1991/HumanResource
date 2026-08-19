@@ -297,15 +297,14 @@
     </div>
 
     <!-- DELETE DEPARTMENT MODAL -->
+    <!-- DELETE DEPARTMENT MODAL -->
     <div id="deleteModal" class="modal hidden">
         <div class="modal-content">
-            <div class="panel-header">
-                <h2>Delete Department</h2>
-            </div>
+            <h3>Delete Department</h3>
             <p id="deleteMessage">Are you sure you want to delete this department?</p>
-            <div class="form-actions">
-                <button type="button" class="primary-btn" id="confirmDeleteBtn">Delete</button>
-                <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
+            <div class="modal-buttons">
+                <button id="cancelDeleteBtn" class="primary-btn" type="button">Cancel</button>
+                <button id="confirmDeleteBtn" class="delete-btn" type="button">Delete</button>
             </div>
         </div>
     </div>

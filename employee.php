@@ -122,6 +122,40 @@
         $activeEmployees = $countData['active'] ?? 0;
         $onLeaveEmployees = $countData['on_leave'] ?? 0;
     }
+
+    // Kunin ang search query kung mayroon
+    // Kunin ang search query kung mayroon
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+    if (!empty($search)) {
+        $searchTerm = "%{$search}%";
+        
+        // Ginamitan ng CONCAT(firstname, ' ', lastname) para mahanap ang buong pangalan
+        $stmt = mysqli_prepare(
+            $conn, 
+            "SELECT id, employee_id, firstname, lastname, department, position, employment_status 
+            FROM employees 
+            WHERE CONCAT(firstname, ' ', lastname) LIKE ? 
+                OR CONCAT(lastname, ' ', firstname) LIKE ?
+                OR employee_id LIKE ? 
+                OR email LIKE ?
+            ORDER BY id DESC"
+        );
+
+        // 4 na parameters para sa 4 na '?' na nasa query
+        mysqli_stmt_bind_param($stmt, "ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+        mysqli_stmt_execute($stmt);
+        $employeesResult = mysqli_stmt_get_result($stmt);
+    } else {
+        // Kapag walang sinearch, ipalabas lahat
+        $employeesResult = mysqli_query(
+            $conn, 
+            "SELECT id, employee_id, firstname, lastname, department, position, employment_status 
+            FROM employees 
+            ORDER BY id DESC"
+        );
+    }
+
 ?>
 
 <!DOCTYPE html>
@@ -157,7 +191,7 @@
 
                 <div class="table-tools">
                     <div class="employee-search-form">
-                        <input class="search-input" id="liveSearchInput" type="text" placeholder="Search employee..." autocomplete="off">
+                        <input class="search-input" id="searchInput" id="liveSearchInput" type="text" placeholder="Search employee..." autocomplete="off">
                         <button class="search-btn" id="liveSearchBtn" type="button">Search</button>
                     </div>
                 </div>
@@ -207,6 +241,7 @@
                 </div> 
                 
                 <div class="employee-panel">
+
                     <table class="dashboard-table employee-table">
                         <thead>
                             <tr>
@@ -223,7 +258,9 @@
                         <tbody id="employeeTableBody">
                             <?php if (mysqli_num_rows($employeesResult) > 0): ?>
                                 <?php while ($employee = mysqli_fetch_assoc($employeesResult)): ?>
-                                    <tr>
+                                    <!-- DINAGDAGAN NG CLASS AT DATA-HREF ANG TR TAG SA IBABA -->
+                                    <tr class="clickable-row" data-href="employee_profile.php?id=<?php echo $employee['id']; ?>">
+                                        
                                         <!-- NAME -->
                                         <td>
                                             <div class="employee-name">
@@ -278,7 +315,6 @@
                     </table>
                 </div>
             </div>
-
         </div> <!-- end .employee-container -->
     </main>
 </div>
@@ -315,22 +351,109 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<script>
+    // 1. Error Modal Handler
+    window.onload = function () {
+        const errorMessage = <?php echo json_encode($_SESSION['employee_error'] ?? ''); ?>;
 
-<!-- ERROR SESSION HANDLER -->
-<?php if (isset($_SESSION['employee_error'])): ?>
-    <script>
-        window.onload = function () {
+        // LALABAS LANG ANG MODAL KUNG MAY HINDI EMPTY NA ERROR
+        if (errorMessage && errorMessage.trim() !== '') {
             const modalTitle   = document.getElementById('modalTitle');
             const modalMessage = document.getElementById('modalMessage');
             const errorModal   = document.getElementById('errorModal');
 
             if (modalTitle) modalTitle.textContent = 'Duplicate Employee ID';
-            if (modalMessage) modalMessage.textContent = <?php echo json_encode($_SESSION['employee_error']); ?>;
+            if (modalMessage) modalMessage.textContent = errorMessage;
             if (errorModal) errorModal.classList.remove('hidden');
-        };
-    </script>
-    <?php unset($_SESSION['employee_error']); ?>
+        }
+    };
+
+    // 2. Clickable Row Handler
+    document.addEventListener('DOMContentLoaded', function () {
+    
+    // ==========================================
+    // 1. LIVE SEARCH FILTER WITH "NO RESULTS FOUND"
+    // ==========================================
+    const searchInput = document.getElementById('searchInput') || document.querySelector('input[name="search"]') || document.querySelector('.search-input');
+    const tableBody   = document.getElementById('employeeTableBody');
+
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', function () {
+            const filter = this.value.toLowerCase().trim();
+            const rows   = tableBody.querySelectorAll('tr.clickable-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                // Kunin LANG ang First Name at Last Name cell (unang column) 
+                // at kung may Employee ID man sa row
+                const nameCell = row.querySelector('.employee-name') || row.children[0];
+                const searchableText = nameCell ? nameCell.textContent.toLowerCase() : row.textContent.toLowerCase();
+
+                if (searchableText.includes(filter)) {
+                    row.style.display = ''; // Ipakita ang row
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none'; // Itago ang row
+                }
+            });
+
+            // "No Employee Found" Row Handler
+            let noMatchRow = document.getElementById('noMatchRow');
+
+            if (visibleCount === 0 && filter !== '') {
+                if (!noMatchRow) {
+                    noMatchRow = document.createElement('tr');
+                    noMatchRow.id = 'noMatchRow';
+                    const colCount = rows[0] ? rows[0].children.length : 5; 
+                    noMatchRow.innerHTML = `<td colspan="${colCount}" style="text-align: center; padding: 15px; color: #888;">No employees found.</td>`;
+                    tableBody.appendChild(noMatchRow);
+                } else {
+                    noMatchRow.style.display = '';
+                }
+            } else if (noMatchRow) {
+                noMatchRow.style.display = 'none';
+            }
+        });
+    }
+
+    // ==========================================
+    // 2. ERROR MODAL HANDLER
+    // ==========================================
+    const errorMessage = <?php echo json_encode($_SESSION['employee_error'] ?? ''); ?>;
+    if (errorMessage && errorMessage.trim() !== '') {
+        const modalTitle   = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const errorModal   = document.getElementById('errorModal');
+
+        if (modalTitle) modalTitle.textContent = 'Duplicate Employee ID';
+        if (modalMessage) modalMessage.textContent = errorMessage;
+        if (errorModal) errorModal.classList.remove('hidden');
+    }
+});
+
+// ==========================================
+// 3. CLICKABLE TABLE ROWS
+// ==========================================
+document.addEventListener('click', function (e) {
+    const row = e.target.closest('.clickable-row');
+    
+    if (row && !e.target.closest('button, a, input')) {
+        const targetUrl = row.getAttribute('data-href');
+        if (targetUrl) {
+            window.location.href = targetUrl;
+        }
+    }
+});
+
+
+</script>
+
+<script src="script.js"></script>
+
+<!-- ERROR SESSION HANDLER -->
+<?php if (isset($_SESSION['employee_error'])): ?>
+
+<?php unset($_SESSION['employee_error']); ?>
 <?php endif; ?>
 
 </body>

@@ -84,6 +84,17 @@
     gap: 10px;
 }
 
+/* Ilagay sa CSS file ng employee list page */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+    background-color: #f1f5f9;
+}
+
+
 @media (max-width: 768px) {
     .employee-form-panel form {
         grid-template-columns: 1fr;

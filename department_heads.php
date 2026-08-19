@@ -220,12 +220,11 @@
         <h3>Delete Department Head</h3>
         <p id="deleteMessage">Are you sure you want to delete this department head?</p>
         <div class="form-actions">
-            <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
             <button type="button" class="primary-btn" id="confirmDeleteBtn">Delete</button>
+            <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
         </div>
     </div>
 </div>
-
 <script src="script.js"></script>
 </body>
 </html>
