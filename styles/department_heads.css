@@ -10,6 +10,19 @@
 }
 
 /* Base Dark Action Button Style */
+
+
+/* ==========================================================
+   MODERN ACTION BUTTONS (Edit / Delete)
+   ========================================================== */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Base style */
 .edit-btn,
 .delete-btn,
 .employee-delete-btn {
@@ -17,90 +30,49 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 6px 14px;
-    border-radius: 8px; /* Sleek, modern rounded corners */
-    font-size: 12px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
     font-weight: 600;
-    line-height: 1;
-    text-decoration: none;
+    border: none;
     cursor: pointer;
-    user-select: none;
+    transition: all 0.2s ease;
     white-space: nowrap;
-    
-    /* Dark Surface Styling */
-    background: #1e293b; /* Deep slate dark surface */
-    color: #f8fafc;      /* Crisp off-white text */
-    border: 1px solid #334155;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    /* Transitions */
-    transition: transform 0.15s ease, 
-                background-color 0.15s ease, 
-                border-color 0.15s ease, 
-                box-shadow 0.15s ease,
-                color 0.15s ease;
 }
 
-/* Icons / SVGs inside action buttons */
-.edit-btn svg,
-.delete-btn svg,
-.employee-delete-btn svg {
-    width: 14px;
-    height: 14px;
-}
-
-/* --- EDIT BUTTON (Dark Slate + Indigo Accent on Hover) --- */
+/* Edit Button - Soft Blue */
 .edit-btn {
-    background: #1e293b;
-    color: #e2e8f0;
-    border-color: #334155;
+    background: #eff6ff;
+    color: #1d4ed8;
 }
 
 .edit-btn:hover {
-    background: #334155;
-    color: #60a5fa; /* Vibrant blue accent */
-    border-color: #475569;
+    background: #dbeafe;
+    color: #1e40af;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 10px rgba(96, 165, 250, 0.15);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
-.edit-btn:active {
-    transform: translateY(0);
-    background: #0f172a;
-}
-
-/* --- DELETE BUTTON (Dark Slate + Rose Accent on Hover) --- */
+/* Delete Button - Soft Red */
 .delete-btn,
 .employee-delete-btn {
-    background: #1e293b;
-    color: #fca5a5; /* Soft red text */
-    border-color: rgba(239, 68, 68, 0.3);
+    background: #fef2f2;
+    color: #dc2626;
 }
 
 .delete-btn:hover,
 .employee-delete-btn:hover {
-    background: #991b1b; /* Solid dark red glow */
-    color: #ffffff;
-    border-color: #ef4444;
+    background: #fee2e2;
+    color: #b91c1c;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
 }
 
+/* Active / Click state */
+.edit-btn:active,
 .delete-btn:active,
 .employee-delete-btn:active {
     transform: translateY(0);
-    background: #7f1d1d;
-}
-
-/* Focus States for Accessibility */
-.edit-btn:focus-visible,
-.delete-btn:focus-visible,
-.employee-delete-btn:focus-visible {
-    outline: 2px solid #60a5fa;
-    outline-offset: 2px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 10px;
+    box-shadow: none;
 }

@@ -68,7 +68,7 @@
         =================================================== -->
 
         <a href="<?php echo htmlspecialchars($dashboardLink); ?>" class="nav-item <?php echo $isActive($dashboardLink); ?>">
-            <img src="images/dashboard.png" alt="" aria-hidden="true">
+            <img src="images/chart-bar-popular.png" alt="" aria-hidden="true">
             <span>Dashboard</span>
         </a>
 
@@ -109,7 +109,7 @@
 
             <!-- DEPARTMENT HEADS -->
             <a href="department_heads.php" class="nav-item <?php echo $isActive('department_heads.php'); ?>">
-                <img src="images/building.png" alt="" aria-hidden="true">
+                <img src="images/building-plus.png" alt="" aria-hidden="true">
                 <span>Department Heads</span>
             </a>
 
@@ -138,10 +138,13 @@
         <!-- ==================================================
              LEAVE MANAGEMENT
         =================================================== -->
-        <a href="leave_management.php" class="nav-item <?php echo $isActive('leave_management.php'); ?>">
-            <img src="images/calendar-month.png" alt="" aria-hidden="true">
-            <span>Leave Management</span>
-        </a>
+
+         <?php if ($isEmployee): ?>
+            <a href="leave_management.php" class="nav-item <?php echo $isActive('leave_management.php'); ?>">
+                <img src="images/calendar-month.png" alt="" aria-hidden="true">
+                <span>Leave Management</span>
+            </a>
+         <?php endif; ?>
 
         <!-- ==================================================
              PAYROLL
@@ -185,9 +188,8 @@
     <?php if ($isAdminOrHR): ?>
 
         <div class="sidebar-section">
-            <h3>Reports</h3>
             <a href="reports.php" class="nav-item <?php echo $isActive('reports.php'); ?>">
-                <img src="images/reports.png" alt="" aria-hidden="true">
+                <img src="images/report-analytics.png" alt="" aria-hidden="true">
                 <span>Reports</span>
             </a>
         </div>
@@ -202,7 +204,6 @@
     <?php if ($isAdmin): ?>
 
         <div class="sidebar-section">
-            <h3>Settings</h3>
             <a href="settings.php" class="nav-item <?php echo $isActive('settings.php'); ?>">
                 <img src="images/settings.png" alt="" aria-hidden="true">
                 <span>Settings</span>

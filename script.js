@@ -78,51 +78,77 @@ document.addEventListener('DOMContentLoaded', function () {
     // EMPLOYEE FORM
     // ==========================
 
+    // ==========================
+    // EMPLOYEE FORM MANAGEMENT
+    // ==========================
+
     const addEmployeeBtn = document.getElementById('addEmployeeBtn');
     const employeeFormPanel = document.querySelector('.employee-form-panel');
     const employeeSummary = document.querySelector('.employee-summary');
-    const employeePanel = document.querySelector('.employee-panel');
+    const employeeDirectorySection = document.querySelector('.employee-directory-section');
+    const panelHeader = document.querySelector('.panel-header');
     const dashboardShell = document.querySelector('.dashboard-shell');
+
     const addEmployeeForm = document.getElementById('addEmployeeForm');
     const editEmployeeForm = document.getElementById('editEmployeeForm');
     const cancelAddEmployeeBtn = document.getElementById('cancelAddEmployeeBtn');
     const cancelEditEmployeeBtn = document.getElementById('cancelEditEmployeeBtn');
+
     const isEditMode = new URLSearchParams(window.location.search).has('edit_id');
     const shouldShowFormOnLoad = document.body.dataset.showForm === '1';
     const shouldShowModalOnLoad = document.body.dataset.showModal === '1';
 
     function showEmployeeForm() {
-        if (employeeSummary) {
-            employeeSummary.classList.add('hidden');
-        }
-        if (employeePanel) {
-            employeePanel.classList.add('hidden');
-        }
-        if (employeeFormPanel) {
-            employeeFormPanel.classList.remove('hidden');
-        }
-        if (dashboardShell) {
-            dashboardShell.classList.add('form-open');
-        }
+        if (employeeSummary) employeeSummary.classList.add('hidden');
+        if (employeeDirectorySection) employeeDirectorySection.classList.add('hidden');
+        if (panelHeader) panelHeader.classList.add('hidden'); // Hides "Employee Directory" header
+        
+        if (employeeFormPanel) employeeFormPanel.classList.remove('hidden');
+        if (dashboardShell) dashboardShell.classList.add('form-open');
     }
 
-
     function hideEmployeeForm() {
-        if (employeeSummary) {
-            employeeSummary.classList.remove('hidden');
-        }
-        if (employeePanel) {
-            employeePanel.classList.remove('hidden');
-        }
-        if (employeeFormPanel) {
-            employeeFormPanel.classList.add('hidden');
-        }
-        if (dashboardShell) {
-            dashboardShell.classList.remove('form-open');
-        }
-        if (addEmployeeForm) {
-            addEmployeeForm.reset();
-        }
+        if (employeeSummary) employeeSummary.classList.remove('hidden');
+        if (employeeDirectorySection) employeeDirectorySection.classList.remove('hidden');
+        if (panelHeader) panelHeader.classList.remove('hidden'); // Restores "Employee Directory" header
+        
+        if (employeeFormPanel) employeeFormPanel.classList.add('hidden');
+        if (dashboardShell) dashboardShell.classList.remove('form-open');
+
+        if (addEmployeeForm) addEmployeeForm.reset();
+    }
+
+    // Show employee form automatically on load if editing or on error
+    if (isEditMode || shouldShowFormOnLoad) {
+        showEmployeeForm();
+    }
+
+    // Show modal automatically on load
+    if (shouldShowModalOnLoad && typeof showModal === 'function') {
+        showModal(
+            document.body.dataset.modalTitle || 'Duplicate Employee ID',
+            document.body.dataset.modalMessage || 'Please complete the form.'
+        );
+    }
+
+    // Event Listeners
+    if (addEmployeeBtn) {
+        addEmployeeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            showEmployeeForm();
+        });
+    }
+
+    if (cancelAddEmployeeBtn) {
+        cancelAddEmployeeBtn.addEventListener('click', function () {
+            window.location.href = 'employee.php';
+        });
+    }
+
+    if (cancelEditEmployeeBtn) {
+        cancelEditEmployeeBtn.addEventListener('click', function () {
+            window.location.href = 'employee.php';
+        });
     }
 
     // Show employee form automatically
@@ -498,5 +524,128 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    
+});
 
+// Employee Search Filtering
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('liveSearchInput');
+    const searchBtn = document.getElementById('liveSearchBtn');
+    const tableBody = document.getElementById('employeeTableBody');
+
+    function performSearch() {
+        if (!searchInput || !tableBody) return;
+
+        const query = searchInput.value.trim();
+
+        fetch(`search_employees.php?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                tableBody.innerHTML = '';
+
+                if (!data.employees || data.employees.length === 0) {
+                    const colSpan = data.isAdminOrHR ? 5 : 4;
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="${colSpan}" style="text-align: center;">
+                                No employees found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                data.employees.forEach(emp => {
+                    const avatarInitials = ((emp.firstname ? emp.firstname.charAt(0) : '') + (emp.lastname ? emp.lastname.charAt(0) : '')).toUpperCase();
+
+                    let actionButtons = '';
+                    if (data.isAdminOrHR) {
+                        actionButtons = `
+                            <td class="action-buttons">
+                                <button type="button" class="edit-btn" onclick="window.location.href='employee.php?edit_id=${emp.id}'">Edit</button>
+                                <button type="button" class="employee-delete-btn delete-btn" data-id="${emp.id}" data-name="${emp.firstname} ${emp.lastname}" data-type="employee">Delete</button>
+                            </td>
+                        `;
+                    }
+
+                    const rowHTML = `
+                        <tr>
+                            <td>
+                                <div class="employee-name">
+                                    <div class="emp-avatar blue-bg">${avatarInitials}</div>
+                                    ${emp.firstname} ${emp.lastname}
+                                </div>
+                            </td>
+                            <td>${emp.department || ''}</td>
+                            <td>${emp.position || ''}</td>
+                            <td>${emp.employment_status || ''}</td>
+                            ${actionButtons}
+                        </tr>
+                    `;
+
+                    tableBody.insertAdjacentHTML('beforeend', rowHTML);
+                });
+            })
+            .catch(error => console.error('Error in search:', error));
+    }
+
+    // Gumagana sa bawat type at backspace
+    if (searchInput) {
+        searchInput.addEventListener('input', performSearch);
+    }
+
+    // Gumagana rin kapag pinindot ang Search button
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+});
+
+
+// Deaprtments Search Filtering
+document.addEventListener('DOMContentLoaded', function () {
+    const deptSearchInput = document.getElementById('liveSearchInput');
+    const deptTableBody = document.getElementById('departmentTableBody');
+
+    if (deptSearchInput && deptTableBody) {
+        deptSearchInput.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+            const rows = deptTableBody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                // Kunin ang text mula sa Department Name (Cell 0) at Department Head (Cell 1)
+                const deptCell = row.cells[0];
+                const headCell = row.cells[1];
+
+                if (!deptCell || row.children.length === 1) return; // Laktawan ang "No departments found" row
+
+                // Linisin ang extra spaces at gawing lowercase
+                const deptText = deptCell.textContent.trim().toLowerCase();
+                const headText = headCell ? headCell.textContent.trim().toLowerCase() : '';
+
+                if (query === '') {
+                    row.style.display = '';
+                    return;
+                }
+
+                // Hatiin sa salita para ma-check kung may salitang NAGSISIMULA sa tina-type na letra
+                const deptWords = deptText.split(/\s+/);
+                const headWords = headText.split(/\s+/);
+
+                const deptMatch = deptWords.some(word => word.startsWith(query));
+                const headMatch = headWords.some(word => word.startsWith(query));
+
+                // Ipapakita lamang ang row kung NAGSISIMULA sa query ang Department Name o Head
+                if (deptMatch || headMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
 });

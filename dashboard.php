@@ -110,8 +110,8 @@
 
                         <!-- RECENT ATTENDANCE PANEL -->
                         <div class="dashboard-panel">
+                            <h2>Recent Attendance</h2>
                             <div class="panel-header">
-                                <h2>Recent Attendance</h2>
                                 <a href="#" class="view-all">View All →</a>
                                 <!-- NOTE: href="#" — this link doesn't actually go anywhere yet -->
                             </div>

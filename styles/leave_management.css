@@ -9,3 +9,100 @@
     display: none !important;
 }
 /* Leave Management page-specific styles */
+.panel-header{
+    margin-bottom: 20px;
+}
+
+/* ==========================================================
+   LEAVE FORM PANEL
+   ========================================================== */
+
+.leave-form-wrapper {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.leave-form-wrapper.hidden {
+    display: none !important;
+}
+
+.leave-form-wrapper:not(.hidden) {
+    display: block;
+}
+
+.leave-form-wrapper .panel-header {
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.leave-form-wrapper .panel-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Leave form layout */
+
+#leaveForm {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+    row-gap: 4px;
+}
+
+#leaveForm .input-group {
+    margin-bottom: 16px;
+}
+
+/* Reason takes the full width */
+
+#leaveForm .input-group:has(#reason) {
+    grid-column: 1 / -1;
+}
+
+#leaveForm .form-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* Keep buttons normal width */
+
+#leaveForm .form-actions .primary-btn {
+    width: auto;
+    min-width: 100px;
+}
+
+/* ==========================================================
+   HIDE LEAVE SUMMARY + TABLE WHEN NEW LEAVE FORM IS OPEN
+   ========================================================== */
+
+.leave-container:has(.leave-form-wrapper:not(.hidden)) .employee-summary,
+.leave-container:has(.leave-form-wrapper:not(.hidden)) .employee-panel {
+    display: none !important;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+    #leaveForm {
+        grid-template-columns: 1fr;
+    }
+
+    #leaveForm .input-group:has(#reason),
+    #leaveForm .form-actions {
+        grid-column: auto;
+    }
+
+    .leave-form-wrapper {
+        padding: 18px;
+    }
+}

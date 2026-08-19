@@ -1,40 +1,24 @@
 <?php
-
     session_start();
-
     require_once 'database.php';
-
 
     // ==========================================================
     // LOGIN CHECK
     // ==========================================================
-
     if (!isset($_SESSION['user_id'])) {
         header("Location: login.php");
         exit();
     }
 
-
     // ==========================================================
-    // CURRENT USER
+    // CURRENT USER & ROLE CHECK
     // ==========================================================
-
     $userId = intval($_SESSION['user_id']);
     $userRole = $_SESSION['role'] ?? '';
     $employeeId = intval($_SESSION['employee_id'] ?? 0);
 
-
-    // ==========================================================
-    // ROLE CHECK
-    // ==========================================================
-
     $isAdminOrHR = ($userRole === 'Admin' || $userRole === 'HR');
     $isDepartmentHead = ($userRole === 'Department Head');
-
-
-    // ==========================================================
-    // EMPLOYEE ACCESS
-    // ==========================================================
 
     if (!$isAdminOrHR && !$isDepartmentHead) {
         header("Location: dashboard.php");
@@ -44,7 +28,6 @@
     // ==========================================================
     // GET DEPARTMENT HEAD'S DEPARTMENT
     // ==========================================================
-
     $headDepartment = '';
 
     if ($isDepartmentHead) {
@@ -64,72 +47,66 @@
             $departmentData = mysqli_fetch_assoc($departmentResult);
             $headDepartment = $departmentData['department_name'] ?? '';
         }
-
     }
 
     // ==========================================================
-    // GET EMPLOYEES
+    // GET EMPLOYEES WITH SEARCH FILTER (INITIAL PAGE LOAD)
     // ==========================================================
+    $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $searchParam = $searchTerm . '%';
 
     if ($isAdminOrHR) {
-
-        // ======================================================
-        // ADMIN / HR
-        // SEE ALL EMPLOYEES
-        // ======================================================
-
-        $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone, 
-            department, position, date_hired, salary, employment_status
-            FROM employees
-            ORDER BY lastname ASC"
-        );
-        mysqli_stmt_execute($employeesQuery);
-
-    } else {
-
-        // ======================================================
-        // DEPARTMENT HEAD
-        // SEE OWN DEPARTMENT ONLY
-        // ======================================================
-
-        $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone,
+        if (!empty($searchTerm)) {
+            $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone, 
                 department, position, date_hired, salary, employment_status
-            FROM employees 
-            WHERE LOWER(department) = LOWER(?)
-            ORDER BY lastname ASC"
-        );
-
-        mysqli_stmt_bind_param($employeesQuery, "s", $headDepartment);
-        mysqli_stmt_execute( $employeesQuery);
-
+                FROM employees 
+                WHERE firstname LIKE ? 
+                OR lastname LIKE ? 
+                OR department LIKE ? 
+                OR position LIKE ? 
+                OR employee_id LIKE ?
+                ORDER BY lastname ASC"
+            );
+            mysqli_stmt_bind_param($employeesQuery, "sssss", $searchParam, $searchParam, $searchParam, $searchParam, $searchParam);
+        } else {
+            $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone, 
+                department, position, date_hired, salary, employment_status
+                FROM employees 
+                ORDER BY lastname ASC"
+            );
+        }
+    } else {
+        if (!empty($searchTerm)) {
+            $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone,
+                    department, position, date_hired, salary, employment_status
+                FROM employees 
+                WHERE LOWER(department) = LOWER(?)
+                AND (firstname LIKE ? OR lastname LIKE ? OR position LIKE ? OR employee_id LIKE ?)
+                ORDER BY lastname ASC"
+            );
+            mysqli_stmt_bind_param($employeesQuery, "sssss", $headDepartment, $searchParam, $searchParam, $searchParam, $searchParam);
+        } else {
+            $employeesQuery = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone,
+                    department, position, date_hired, salary, employment_status
+                FROM employees 
+                WHERE LOWER(department) = LOWER(?)
+                ORDER BY lastname ASC"
+            );
+            mysqli_stmt_bind_param($employeesQuery, "s", $headDepartment);
+        }
     }
 
-
+    mysqli_stmt_execute($employeesQuery);
     $employeesResult = mysqli_stmt_get_result($employeesQuery);
-
 
     // ==========================================================
     // EMPLOYEE SUMMARY COUNTS
     // ==========================================================
-
     if ($isAdminOrHR) {
-
-        // ======================================================
-        // ADMIN / HR
-        // COUNT ALL EMPLOYEES
-        // ======================================================
-
-        $totalEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees"))['total'];
-        $activeEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'"))['total'];
-        $onLeaveEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'"))['total'];
-
+        $totalEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees"))['total'] ?? 0;
+        $activeEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'Active'"))['total'] ?? 0;
+        $onLeaveEmployees = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM employees WHERE employment_status = 'On Leave'"))['total'] ?? 0;
     } else {
-
-        // ======================================================
-        // DEPARTMENT HEAD
-        // COUNT OWN DEPARTMENT ONLY
-        // ======================================================
-
         $countQuery = mysqli_prepare($conn, "SELECT COUNT(*) AS total,
                 SUM(employment_status = 'Active') AS active,
                 SUM(employment_status = 'On Leave') AS on_leave
@@ -144,9 +121,7 @@
         $totalEmployees = $countData['total'] ?? 0;
         $activeEmployees = $countData['active'] ?? 0;
         $onLeaveEmployees = $countData['on_leave'] ?? 0;
-
     }
-
 ?>
 
 <!DOCTYPE html>
@@ -169,137 +144,108 @@
 
 <div class="dashboard-shell">
     <?php include 'sidebar.php'; ?>
+
     <main class="dashboard-main">
-        <div class="dashboard-container">
-            <div class="employee-container">
+        <div class="employee-container">
 
-                <!-- =====================================================
-                     PAGE HEADER
-                ====================================================== -->
-                <div class="page-header">
-                    <div>
-                        <p class="page-kicker">People Management</p>
-                        <h1>Employees</h1>
-                    </div>
-
-                    <div class="table-tools">
-                        <form class="employee-search-form" action="employee.php" method="GET">
-                            <input class="search-input" type="text" name="search" placeholder="Search employee..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-                            <button class="search-btn" type="submit">Search</button>
-                        </form>
-                    </div>
-
-                    <?php if ($isAdminOrHR): ?>
-                        <button type="button" class="primary-btn" id="addEmployeeBtn">
-                            + Add Employee
-                        </button>
-                    <?php endif; ?>
+            <!-- PAGE HEADER & SEARCH -->
+            <div class="page-header">
+                <div>
+                    <p class="page-kicker">People Management</p>
+                    <h1>Employees</h1>
                 </div>
 
-                <!-- =====================================================
-                     SUMMARY
-                ====================================================== -->
-                <div class="employee-summary">
-                    <div class="summary-card blue">
-                        <h3>Total Staff</h3>
-                        <p><?php echo $totalEmployees; ?></p>
-                    </div>
-                    <div class="summary-card green">
-                        <h3>Active</h3>
-                        <p><?php echo $activeEmployees; ?></p>
-                    </div>
-                    <div class="summary-card purple">
-                        <h3>On Leave</h3>
-                        <p><?php echo $onLeaveEmployees; ?></p>
+                <div class="table-tools">
+                    <div class="employee-search-form">
+                        <input class="search-input" id="liveSearchInput" type="text" placeholder="Search employee..." autocomplete="off">
+                        <button class="search-btn" id="liveSearchBtn" type="button">Search</button>
                     </div>
                 </div>
-
-                <!-- =====================================================
-                     ADD / EDIT FORM
-                ====================================================== -->
-                <?php
-                    $error   = $_GET['error'] ?? '';
-                    $success = $_GET['success'] ?? '';
-                    $isEditMode = isset($_GET['edit_id']) && !empty($_GET['edit_id']);
-                ?>
 
                 <?php if ($isAdminOrHR): ?>
-                    <?php if ($isEditMode): ?>
-                        <?php include 'edit_employee.php'; ?>
-                    <?php else: ?>
-                        <?php include 'add_employee.php'; ?>
-                    <?php endif; ?>
+                    <button type="button" class="primary-btn" id="addEmployeeBtn">
+                        + Add Employee
+                    </button>
                 <?php endif; ?>
+            </div>
 
-                <!-- =====================================================
-                     EMPLOYEE TABLE
-                ====================================================== -->
+            <!-- SUMMARY CARDS -->
+            <div class="employee-summary">
+                <div class="summary-card blue">
+                    <h3>Total Staff</h3>
+                    <p><?php echo $totalEmployees; ?></p>
+                </div>
+                <div class="summary-card green">
+                    <h3>Active</h3>
+                    <p><?php echo $activeEmployees; ?></p>
+                </div>
+                <div class="summary-card purple">
+                    <h3>On Leave</h3>
+                    <p><?php echo $onLeaveEmployees; ?></p>
+                </div>
+            </div>
+
+            <!-- ADD / EDIT FORM -->
+            <?php
+                $error = $_GET['error'] ?? '';
+                $success = $_GET['success'] ?? '';
+                $isEditMode = isset($_GET['edit_id']) && !empty($_GET['edit_id']);
+            ?>
+
+            <?php if ($isAdminOrHR): ?>
+                <?php if ($isEditMode): ?>
+                    <?php include 'edit_employee.php'; ?>
+                <?php else: ?>
+                    <?php include 'add_employee.php'; ?>
+                <?php endif; ?>
+            <?php endif; ?>
+
+            <!-- EMPLOYEE TABLE SECTION -->
+            <div class="employee-directory-section"> 
                 <div class="panel-header">
                     <h3>Employee Directory</h3>
-                </div>
+                </div> 
+                
                 <div class="employee-panel">
-
                     <table class="dashboard-table employee-table">
-
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Department</th>
                                 <th>Position</th>
                                 <th>Status</th>
-
                                 <?php if ($isAdminOrHR): ?>
                                     <th>Actions</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody id="employeeTableBody">
                             <?php if (mysqli_num_rows($employeesResult) > 0): ?>
                                 <?php while ($employee = mysqli_fetch_assoc($employeesResult)): ?>
                                     <tr>
-
                                         <!-- NAME -->
                                         <td>
                                             <div class="employee-name">
                                                 <div class="emp-avatar blue-bg">
-                                                    <?php
-                                                        echo strtoupper(substr($employee['firstname'], 0, 1).substr($employee['lastname'], 0, 1));
-                                                    ?>
+                                                    <?php echo strtoupper(substr($employee['firstname'], 0, 1) . substr($employee['lastname'], 0, 1)); ?>
                                                 </div>
-
-                                                <?php
-                                                    echo htmlspecialchars($employee['firstname']. ' '. $employee['lastname']);
-                                                ?>
+                                                <?php echo htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname']); ?>
                                             </div>
                                         </td>
 
                                         <!-- DEPARTMENT -->
-                                        <td>
-                                            <?php
-                                                echo htmlspecialchars($employee['department']);
-                                            ?>
-                                        </td>
+                                        <td><?php echo htmlspecialchars($employee['department']); ?></td>
 
                                         <!-- POSITION -->
-                                        <td>
-                                            <?php
-                                                echo htmlspecialchars($employee['position']);
-                                            ?>
-                                        </td>
+                                        <td><?php echo htmlspecialchars($employee['position']); ?></td>
 
                                         <!-- STATUS -->
-                                        <td>
-                                            <?php
-                                                echo htmlspecialchars($employee['employment_status']);
-                                            ?>
-                                        </td>
+                                        <td><?php echo htmlspecialchars($employee['employment_status']); ?></td>
 
                                         <!-- ACTIONS -->
                                         <?php if ($isAdminOrHR): ?>
                                             <td class="action-buttons">
-
-                                                <!-- EDIT -->
                                                 <button 
                                                     type="button" 
                                                     class="edit-btn" 
@@ -308,16 +254,11 @@
                                                     Edit
                                                 </button>
 
-                                                <!-- DELETE -->
                                                 <button
                                                     type="button"
                                                     class="employee-delete-btn delete-btn"
                                                     data-id="<?php echo $employee['id']; ?>"
-                                                    data-name="<?php echo htmlspecialchars(
-                                                        $employee['firstname'] . ' ' . $employee['lastname'],
-                                                        ENT_QUOTES,
-                                                        'UTF-8'
-                                                    ); ?>"
+                                                    data-name="<?php echo htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname'], ENT_QUOTES, 'UTF-8'); ?>"
                                                     data-type="employee"
                                                 >
                                                     Delete
@@ -327,7 +268,6 @@
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
-
                                 <tr>
                                     <td colspan="<?php echo $isAdminOrHR ? '5' : '4'; ?>" style="text-align: center;">
                                         No employees found.
@@ -338,7 +278,8 @@
                     </table>
                 </div>
             </div>
-        </div>
+
+        </div> <!-- end .employee-container -->
     </main>
 </div>
 
@@ -365,32 +306,6 @@
     </div>
 <?php endif; ?>
 
-<script src="script.js"></script>
-
-<!-- ERROR MESSAGE -->
-<?php if (isset($_SESSION['employee_error'])): ?>
-    <script>
-        window.onload = function () {
-            const modalTitle   = document.getElementById('modalTitle');
-            const modalMessage = document.getElementById('modalMessage');
-            const errorModal   = document.getElementById('errorModal');
-
-            if (modalTitle) {
-                modalTitle.textContent = 'Duplicate Employee ID';
-            }
-
-            if (modalMessage) {
-                modalMessage.textContent = <?php echo json_encode($_SESSION['employee_error']); ?>;
-            }
-
-            if (errorModal) {
-                errorModal.classList.remove('hidden');
-            }
-        };
-    </script>
-    <?php unset($_SESSION['employee_error']); ?>
-<?php endif; ?>
-
 <!-- EMPLOYEE SUCCESS MODAL -->
 <div id="employeeModal" class="modal hidden">
     <div class="modal-content">
@@ -399,5 +314,24 @@
         <button id="closeEmployeeModal" type="button">OK</button>
     </div>
 </div>
+
+<script src="script.js"></script>
+
+<!-- ERROR SESSION HANDLER -->
+<?php if (isset($_SESSION['employee_error'])): ?>
+    <script>
+        window.onload = function () {
+            const modalTitle   = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const errorModal   = document.getElementById('errorModal');
+
+            if (modalTitle) modalTitle.textContent = 'Duplicate Employee ID';
+            if (modalMessage) modalMessage.textContent = <?php echo json_encode($_SESSION['employee_error']); ?>;
+            if (errorModal) errorModal.classList.remove('hidden');
+        };
+    </script>
+    <?php unset($_SESSION['employee_error']); ?>
+<?php endif; ?>
+
 </body>
 </html>

@@ -101,18 +101,7 @@ if ($isAdminOrHR) {
             <div class="schedule-container">
 
                 <!-- PAGE HEADER -->
-                <div class="page-header">
-                    <div>
-                        <p class="page-kicker">Workforce Management</p>
-                        <h1>Employee Schedules</h1>
-                    </div>
-
-                    <?php if ($isAdminOrHR): ?>
-                        <button type="button" class="primary-btn" id="addScheduleBtn">
-                            + Add Schedule
-                        </button>
-                    <?php endif; ?>
-                </div>
+               
 
                 <!-- SCHEDULE FORM -->
                 <div class="schedule-form-panel" id="scheduleFormPanel">
