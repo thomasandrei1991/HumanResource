@@ -147,7 +147,8 @@
 
                     <div class="form-actions">
                         <button type="submit" class="primary-btn">Create Account</button>
-                        <button type="button" class="primary-btn" onclick="window.location.href='dashboard.php'">
+                        <!-- Sa add_department_head.php -->
+                        <button type="button" class="primary-btn" onclick="window.location.href='department_heads.php'">
                             Cancel
                         </button>
                     </div>

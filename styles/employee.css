@@ -71,6 +71,10 @@
     flex-wrap: wrap;
 }
 
+.employee-form-panel .form-actions button{
+    margin-top: 15px;
+}
+
 .employee-form-panel .form-actions .primary-btn {
     min-width: 140px;
 }

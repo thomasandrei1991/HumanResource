@@ -100,9 +100,9 @@
                             if ($departmentHeadsQuery && mysqli_num_rows($departmentHeadsQuery) > 0):
                                 while ($head = mysqli_fetch_assoc($departmentHeadsQuery)):
                                     $fullname = $head['fullname'];
-                                    $departmentName = $head['department_name']?? 'Not Assigned';
+                                    $departmentName = $head['department_name'] ?? 'Not Assigned';
                                     $username = $head['username'];
-                                    $departmentStatus = $head['department_status']?? 'Inactive';
+                                    $departmentStatus = $head['department_status'] ?? 'Inactive';
 
                                     // ========================================
                                     // INITIALS
@@ -164,8 +164,7 @@
                                 ========================== -->
 
                                 <td>
-                                    <span class="status-badge
-                                        <?php echo $statusClass;?>">
+                                    <span class="status-badge <?php echo $statusClass;?>">
                                         <?php echo htmlspecialchars($departmentStatus);?>
                                     </span>
                                 </td>
@@ -175,22 +174,24 @@
                                     ACTION
                                 ========================== -->
 
-                                <td>
-                                    <div class="action-buttons">
-                                        <button type="button" class="edit-btn" 
-                                            onclick="window.location.href='edit_department_head.php?id=<?php echo $head['user_id']; ?>'"
-                                        >
-                                            Edit
-                                        </button>
+                                <td class="action-buttons">
 
-                                        <button type="button" class="employee-delete-btn delete-btn"
-                                            data-id="<?php echo $head['user_id']; ?>"
-                                            data-type="department_head"
-                                            data-name="<?php echo htmlspecialchars($fullname); ?>"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        class="edit-btn"
+                                        onclick="window.location.href='edit_department_head.php?id=<?php echo $head['user_id']; ?>'">
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="employee-delete-btn delete-btn"
+                                        data-id="<?php echo $head['user_id']; ?>"
+                                        data-name="<?php echo htmlspecialchars($fullname); ?>"
+                                        data-type="department_head">
+                                        Delete
+                                    </button>
+
                                 </td>
                             </tr>
                         <?php
@@ -212,17 +213,36 @@
 </div>
 
 <!-- ==========================
-    DELETE MODAL
+     DELETE MODAL
 ========================== -->
 
-<div id="deleteModal" class="modal hidden" role="dialog" aria-modal="true">
+<div id="deleteModal" class="modal hidden">
     <div class="modal-content">
+
         <h3>Delete Department Head</h3>
-        <p id="deleteMessage">Are you sure you want to delete this department head?</p>
-        <div class="form-actions">
-            <button type="button" class="primary-btn" id="confirmDeleteBtn">Delete</button>
-            <button type="button" class="primary-btn" id="cancelDeleteBtn">Cancel</button>
+
+        <p id="deleteMessage">
+            Are you sure you want to delete this department head?
+        </p>
+
+        <div class="modal-buttons">
+
+            <button
+                id="cancelDeleteBtn"
+                type="button"
+                class="primary-btn">
+                Cancel
+            </button>
+
+            <button
+                id="confirmDeleteBtn"
+                type="button"
+                class="delete-btn">
+                Delete
+            </button>
+
         </div>
+
     </div>
 </div>
 <script src="script.js"></script>

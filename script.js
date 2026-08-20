@@ -278,7 +278,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ==========================
-    // DELETE MODAL
+    // DELETE MODAL (GLOBAL)
+    // Employee / Attendance / Department / Department Head
     // ==========================
 
     const deleteButtons = document.querySelectorAll(".employee-delete-btn");
@@ -286,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const deleteMessage = document.getElementById("deleteMessage");
     const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
     const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+
     let deleteId = null;
     let deleteType = null;
 
@@ -293,44 +295,39 @@ document.addEventListener('DOMContentLoaded', function () {
     // OPEN DELETE MODAL
     // ==========================
 
-    deleteButtons.forEach(function(button) {
-        button.addEventListener("click", function(event) {
+    deleteButtons.forEach((button) => {
+        button.addEventListener("click", function (event) {
             event.preventDefault();
-            // Kunin ang ID mismo sa data-id
+
             deleteId = this.dataset.id;
-            // Employee or Attendance
             deleteType = this.dataset.type || "employee";
-            const name = this.dataset.name;
-            console.log("DELETE ID:", deleteId);
-            console.log("DELETE TYPE:", deleteType);
+
+            const name = this.dataset.name || "this record";
 
             if (deleteMessage) {
-                deleteMessage.textContent = "Are you sure you want to delete " + name + "?";
+                deleteMessage.textContent =
+                    `Are you sure you want to delete ${name}?`;
             }
 
             if (deleteModal) {
                 deleteModal.classList.remove("hidden");
             }
-
         });
-
     });
-
 
     // ==========================
     // CANCEL DELETE
     // ==========================
 
     if (cancelDeleteBtn) {
-        cancelDeleteBtn.addEventListener("click", function() {
+        cancelDeleteBtn.addEventListener("click", function () {
             deleteId = null;
             deleteType = null;
+
             if (deleteModal) {
                 deleteModal.classList.add("hidden");
             }
-
         });
-
     }
 
     // ==========================
@@ -338,47 +335,33 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================
 
     if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", function () {
 
-        confirmDeleteBtn.addEventListener("click", function() {
+            if (!deleteId) return;
 
-            console.log("CONFIRM DELETE");
-            console.log("ID:", deleteId);
-            console.log("TYPE:", deleteType);
+            let url = "";
 
-            if (!deleteId) {
-                console.log("No delete ID found.");
-                return;
+            switch (deleteType) {
+
+                case "attendance":
+                    url = `delete_attendance.php?id=${deleteId}`;
+                    break;
+
+                case "department":
+                    url = `delete_department.php?id=${deleteId}`;
+                    break;
+
+                case "department_head":
+                    url = `delete_department_head.php?id=${deleteId}`;
+                    break;
+
+                default:
+                    url = `delete_employee.php?id=${deleteId}`;
+                    break;
             }
 
-            // ATTENDANCE DELETE
-            if (deleteType === "attendance") {
-
-                window.location.href =
-                    "delete_attendance.php?id=" +
-                    encodeURIComponent(deleteId);
-
-            }
-
-            // DEPARTMENT DELETE
-            else if (deleteType === "department") {
-
-                window.location.href =
-                    "delete_department.php?id=" +
-                    encodeURIComponent(deleteId);
-
-            }
-
-            // EMPLOYEE DELETE
-            else {
-
-                window.location.href =
-                    "delete_employee.php?id=" +
-                    encodeURIComponent(deleteId);
-
-            }
-
+            window.location.href = url;
         });
-
     }
 
 
@@ -389,7 +372,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const addDepartmentBtn = document.getElementById('addDepartmentBtn');
     const addDepartmentFormPanel = document.getElementById('addDepartmentFormPanel');
     const cancelAddDepartmentBtn = document.getElementById('cancelAddDepartmentBtn');
-
     const departmentSummary = document.querySelector('.department-container .employee-summary');
     const departmentPanel = document.querySelector('.department-container .employee-panel');
 

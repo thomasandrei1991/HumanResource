@@ -76,3 +76,128 @@
     transform: translateY(0);
     box-shadow: none;
 }
+
+
+/* ========================================
+   FORM & EDIT PAGE STYLES
+   ======================================== */
+
+.form-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 24px 32px;
+    max-width: 550px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1f2937;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.secondary-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.employee-panel {
+
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 1 auto !important; /* Kapag naka-flexbox ang parent container */
+  overflow: auto;
+  
+  /* Tumatago sa scrollbar para sa Firefox at IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Tumatago sa scrollbar para sa Chrome, Safari, at Opera */
+.employee-panel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Siguraduhing walang nakabalakid na fixed height sa mismong table */
+.employee-table {
+  width: 100%;
+  height: auto;
+  border-collapse: collapse;
+}
+
+/* Gamitin ang padding sa halip na fixed height sa rows/cells */
+.employee-table tr {
+  height: auto;
+}
+
+.employee-table th,
+.employee-table td {
+  padding: 12px 16px; /* Dito nako-control ang taba/nipis ng bawat row */
+  vertical-align: middle;
+}

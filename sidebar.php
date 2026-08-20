@@ -68,7 +68,7 @@
         =================================================== -->
 
         <!-- Sidebar Link para sa Profile -->
-        <?php if ($isEmployee): ?>
+        <?php if ($isEmployee || $isDepartmentHead): ?>
 
             <a href="employee_profile.php" class="sidebar-link nav-item" >
                 <img src="images/chart-bar-popular.png" alt="" aria-hidden="true">
