@@ -259,6 +259,14 @@ html, body {
     padding: 0 !important;
 }
 
+.employee-form-panel .form-actions .primary-btn {
+    min-width: 140px;
+}
+
+
+
+
+
 /* ==========================================================
    PAGE HEADER
    ========================================================== */
@@ -789,6 +797,32 @@ select.inputs {
     margin-top: 20px;
     width: 100%;
 }
+
+/* Siguraduhing pantay ang laki ng mga button sa LAHAT ng form-actions */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+/* Force standard height and sizing for all buttons inside form-actions */
+.form-actions .primary-btn,
+.form-actions .secondary-btn,
+.form-actions button {
+  box-sizing: border-box !important;
+  height: var(--control-height, 40px) !important;
+  padding: 0 20px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 
 
 /* ==========================================================

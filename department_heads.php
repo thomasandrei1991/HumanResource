@@ -218,31 +218,14 @@
 
 <div id="deleteModal" class="modal hidden">
     <div class="modal-content">
-
         <h3>Delete Department Head</h3>
-
         <p id="deleteMessage">
             Are you sure you want to delete this department head?
         </p>
-
         <div class="modal-buttons">
-
-            <button
-                id="cancelDeleteBtn"
-                type="button"
-                class="primary-btn">
-                Cancel
-            </button>
-
-            <button
-                id="confirmDeleteBtn"
-                type="button"
-                class="delete-btn">
-                Delete
-            </button>
-
+            <button id="confirmDeleteBtn" type="button" class="delete-btn">Ok</button>
+            <button id="cancelDeleteBtn" type="button" class="primary-btn">Cancel</button>
         </div>
-
     </div>
 </div>
 <script src="script.js"></script>

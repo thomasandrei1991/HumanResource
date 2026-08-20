@@ -23,12 +23,9 @@
             </select>
         </div>
 
-
         <div class="form-actions">
             <button type="submit" class="primary-btn">Save</button>
-            <button type="button" class="primary-btn" id="cancelAddDepartmentBtn">Cancel</button>
+            <button type="button" class="secondary-btn" id="cancelAddDepartmentBtn">Cancel</button>
         </div>
-
     </form>
-    
 </div>

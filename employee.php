@@ -335,8 +335,8 @@
             <h3>Delete Employee</h3>
             <p id="deleteMessage">Are you sure you want to delete this employee?</p>
             <div class="modal-buttons">
+                <button id="confirmDeleteBtn" class="delete-btn" type="button">Ok</button>
                 <button id="cancelDeleteBtn" class="primary-btn" type="button">Cancel</button>
-                <button id="confirmDeleteBtn" class="delete-btn" type="button">Delete</button>
             </div>
         </div>
     </div>
