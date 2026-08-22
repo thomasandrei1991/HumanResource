@@ -49,12 +49,11 @@
 
     <script>
         window.onload = function () {
-            document.getElementById("modalMessage").textContent =
-                "<?php echo $_SESSION['login_error']; ?>";
+            document.getElementById("modalMessage").textContent = "<?php echo $_SESSION['login_error']; ?>";
             document.getElementById("errorModal").classList.remove("hidden");
         }
-        </script>
-        <?php
+    </script>
+    <?php
         unset($_SESSION['login_error']);
         endif;
     ?>
@@ -66,8 +65,8 @@
             document.getElementById("modalMessage").textContent = "<?php echo $_SESSION['register_success']; ?>";
             document.getElementById("errorModal").classList.remove("hidden");
         }
-        </script>
-        <?php
+    </script>
+    <?php
         unset($_SESSION['register_success']);
         endif;
     ?>

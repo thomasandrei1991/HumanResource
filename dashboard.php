@@ -83,8 +83,7 @@
                         <div class="user-profile">
                             <div class="user-info">
                                 <span><?php echo htmlspecialchars($displayName); ?></span>
-                                <span>HR Manager</span>
-                                <!-- NOTE: "HR Manager" is hardcoded here, not pulled from $_SESSION['role'] -->
+                                <span><?php echo htmlspecialchars($_SESSION['role'] ?? 'Employee'); ?></span>
                             </div>
                             <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
                         </div>
@@ -109,11 +108,13 @@
                     <div class="dashboard-content">
 
                         <!-- RECENT ATTENDANCE PANEL -->
+                        <!-- RECENT ATTENDANCE PANEL -->
+                        <!-- RECENT ATTENDANCE PANEL -->
+                        <!-- RECENT ATTENDANCE PANEL -->
                         <div class="dashboard-panel">
                             <h2>Recent Attendance</h2>
                             <div class="panel-header">
-                                <a href="#" class="view-all">View All →</a>
-                                <!-- NOTE: href="#" — this link doesn't actually go anywhere yet -->
+                                <a href="attendance.php" class="view-all">View All →</a>
                             </div>
                             <table class="dashboard-table">
                                 <thead>
@@ -127,44 +128,56 @@
                                 <tbody>
 
                                 <?php
-                                // Pull the 5 most recent attendance records, joined with
-                                // employees so we get name + department in one query
+                                // Ikoconnect ang attendance table sa employees at users table
+
                                 $attendanceQuery = mysqli_query($conn, "SELECT
-                                        attendance.attendance_date,
-                                        attendance.time_in,
-                                        attendance.status,
-                                        employees.firstname,
-                                        employees.lastname,
-                                        employees.department
-                                    FROM attendance INNER JOIN employees ON attendance.employee_id = employees.id
-                                    ORDER BY attendance.attendance_date DESC, attendance.time_in DESC LIMIT 5"
+                                        a.attendance_date,
+                                        a.time_in,
+                                        a.status,
+                                        COALESCE(e.firstname, e2.firstname, u.username, 'Employee') AS firstname,
+                                        COALESCE(e.lastname, e2.lastname, '') AS lastname,
+                                        COALESCE(e.department, e2.department, 'N/A') AS department
+                                    FROM attendance a
+                                    LEFT JOIN employees e ON (a.employee_id = e.id)
+                                    LEFT JOIN users u ON (a.employee_id = u.id)
+                                    LEFT JOIN employees e2 ON (
+                                        TRIM(LOWER(u.username)) = TRIM(LOWER(e2.firstname))
+                                        OR u.id = e2.id
+                                    )
+                                    ORDER BY a.attendance_date DESC, a.time_in DESC 
+                                    LIMIT 5"
                                 );
 
                                 if ($attendanceQuery && mysqli_num_rows($attendanceQuery) > 0):
                                     while ($attendance = mysqli_fetch_assoc($attendanceQuery)):
 
-                                        $firstname = $attendance['firstname'];
-                                        $lastname  = $attendance['lastname'];
-                                        $fullName  = $firstname . " " . $lastname;
+                                        $firstname = trim($attendance['firstname']);
+                                        $lastname  = trim($attendance['lastname']);
+                                        
+                                        // Pagsasamahin ang First Name at Last Name na kapareho ng sa Employee Table
+                                        $fullName  = trim($firstname . ' ' . $lastname);
 
-                                        // Build initials for the avatar circle, e.g. "SM"
-                                        $initials = strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1));
-                                        // NOTE: this reuses the $initials variable from the logged-in
-                                        // user's initials above — it gets overwritten here on every loop,
-                                        // so don't rely on $initials for the logged-in user after this point
+                                        // Buoin ang initials para sa Avatar (Kapareho sa Employee Table)
+                                        $initials  = strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1));
+                                        if (empty($initials)) {
+                                            $initials = 'E';
+                                        }
 
-                                        // Attendance status → CSS class, same mapping used on attendance.php
-                                        switch ($attendance['status']) {
-                                            case 'Present':
+                                        // Department (Kapareho sa Employee Table)
+                                        $department = !empty($attendance['department']) ? $attendance['department'] : 'N/A';
+
+                                        // Status mapping para sa CSS
+                                        switch (strtolower($attendance['status'])) {
+                                            case 'present':
                                                 $statusClass = 'present';
                                                 break;
-                                            case 'Late':
+                                            case 'late':
                                                 $statusClass = 'late';
                                                 break;
-                                            case 'Absent':
+                                            case 'absent':
                                                 $statusClass = 'absent';
                                                 break;
-                                            case 'On Leave':
+                                            case 'on leave':
                                                 $statusClass = 'on-leave';
                                                 break;
                                             default:
@@ -180,8 +193,14 @@
                                                 <?php echo htmlspecialchars($fullName); ?>
                                             </div>
                                         </td>
-                                        <td><?php echo htmlspecialchars($attendance['department']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendance['time_in'] ?? '--'); ?></td>
+                                        <td><?php echo htmlspecialchars($department); ?></td>
+                                        <td>
+                                            <?php 
+                                                echo (!empty($attendance['time_in']) && $attendance['time_in'] !== '00:00:00') 
+                                                    ? date('h:i A', strtotime($attendance['time_in'])) 
+                                                    : '--'; 
+                                            ?>
+                                        </td>
                                         <td>
                                             <span class="status-badge <?php echo $statusClass; ?>">
                                                 <?php echo htmlspecialchars($attendance['status']); ?>

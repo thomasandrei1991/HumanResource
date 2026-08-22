@@ -47,9 +47,9 @@ if ($isAdminOrHR) {
     $deptStmt = mysqli_prepare(
         $conn,
         "SELECT department_name
-         FROM departments
-         WHERE department_head = ? AND status = 'active'
-         LIMIT 1"
+        FROM departments
+        WHERE department_head = ? AND LOWER(status) = 'active'
+        LIMIT 1"
     );
 
     if ($deptStmt) {
@@ -77,6 +77,8 @@ if ($isAdminOrHR) {
         $employeesResult = mysqli_stmt_get_result($empStmt);
     }
 }
+
+
 ?>
 
 <!DOCTYPE html>

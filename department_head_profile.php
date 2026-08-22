@@ -1,118 +1,117 @@
 <?php
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-    session_start();
+session_start();
+require_once 'database.php';
 
-    require_once 'database.php';
+// 1. Check user authentication
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-    // 1. LOGIN CHECK
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
-        exit();
-    }
+$userId = intval($_SESSION['user_id']);
+$successMsg = '';
+$errorMsg = '';
 
-    $loggedInUserId = intval($_SESSION['user_id']);
-    
-    // Kunin ang logged-in user details mula sa DB para sigurado
-    $userStmt = mysqli_prepare($conn, "SELECT id, employee_id, role, fullname FROM users WHERE id = ? LIMIT 1");
-    mysqli_stmt_bind_param($userStmt, "i", $loggedInUserId);
-    mysqli_stmt_execute($userStmt);
-    $userRes = mysqli_stmt_get_result($userStmt);
-    $currentUser = mysqli_fetch_assoc($userRes);
-    mysqli_stmt_close($userStmt);
+/* ------------------------------------------------------------
+   1. HANDLE PROFILE UPDATE (NAME, EMAIL, & PHONE)
+   ------------------------------------------------------------ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_profile') {
+    $firstname = trim($_POST['firstname'] ?? '');
+    $lastname  = trim($_POST['lastname'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $phone     = trim($_POST['phone'] ?? '');
+    $newFullName = trim($firstname . ' ' . $lastname);
 
-    $loggedInEmpDbId = !empty($currentUser['employee_id']) ? intval($currentUser['employee_id']) : 0;
+    if (!empty($newFullName)) {
+        $hasError = false;
 
-    // 2. TUKUYIN KUNG ANONG PROFILE ANG TINITINGNAN
-    // Kapag may ?id= sa URL, yun ang tinitingnan. Kung wala, gagamitin ang sariling employee_id ng logged-in user.
-    $targetEmpId = isset($_GET['id']) ? intval($_GET['id']) : $loggedInEmpDbId;
-
-    $employee = null;
-    if ($targetEmpId > 0) {
-        $empStmt = mysqli_prepare($conn, "SELECT id, employee_id, firstname, lastname, email, phone, department, position, date_hired, employment_status FROM employees WHERE id = ? LIMIT 1");
-        if ($empStmt) {
-            mysqli_stmt_bind_param($empStmt, "i", $targetEmpId);
-            mysqli_stmt_execute($empStmt);
-            $res = mysqli_stmt_get_result($empStmt);
-            if ($row = mysqli_fetch_assoc($res)) {
-                $employee = $row;
+        // A. Update Name sa departments table
+        $updateDeptQuery = "UPDATE departments SET department_head = ? WHERE LOWER(TRIM(department_name)) = 'information technology'";
+        $stmtDept = mysqli_prepare($conn, $updateDeptQuery);
+        if ($stmtDept) {
+            mysqli_stmt_bind_param($stmtDept, "s", $newFullName);
+            if (!mysqli_stmt_execute($stmtDept)) {
+                $hasError = true;
             }
-            mysqli_stmt_close($empStmt);
-        }
-    }
-
-    // Fallback display kapag walang nahanap na record sa employees table
-    if (!$employee) {
-        $nameParts = explode(' ', $currentUser['fullname'] ?? 'User Profile');
-        $fname = $nameParts[0] ?? '';
-        $lname = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : '';
-
-        $employee = [
-            'id'                => 0,
-            'employee_id'       => 'EMP-' . str_pad($loggedInUserId, 3, '0', STR_PAD_LEFT),
-            'firstname'         => $fname,
-            'lastname'          => $lname,
-            'email'             => $_SESSION['email'] ?? '',
-            'phone'             => '',
-            'department'        => 'N/A',
-            'position'          => $currentUser['role'] ?? 'Staff',
-            'date_hired'        => date('Y-m-d'),
-            'employment_status' => 'Active'
-        ];
-    }
-
-    $employeeId = intval($employee['id']);
-
-    // 3. STRICT OWNERSHIP CHECK
-    // Lalabas LAMANG ang Edit Profile button kung:
-    // Ang tinitingnang record ID ($employeeId) ay KAPAREHO ng nakalog-in na Employee ID ($loggedInEmpDbId)
-    // AT may valid ID na higit sa 0.
-    $isSelfProfile = ($loggedInEmpDbId > 0 && $employeeId === $loggedInEmpDbId);
-
-    // Notifications
-    $successMsg = $_SESSION['successMsg'] ?? '';
-    $errorMsg   = $_SESSION['errorMsg'] ?? '';
-    unset($_SESSION['successMsg'], $_SESSION['errorMsg']);
-
-    // 4. PROCESS UPDATE PROFILE
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_profile') {
-        
-        if (!$isSelfProfile) {
-            $_SESSION['errorMsg'] = "You are not authorized to edit this profile.";
-            header("Location: employee_profile.php" . ($employeeId > 0 ? "?id=" . $employeeId : ""));
-            exit();
+            mysqli_stmt_close($stmtDept);
         }
 
-        $firstname = trim($_POST['firstname'] ?? '');
-        $lastname  = trim($_POST['lastname'] ?? '');
-        $email     = trim($_POST['email'] ?? '');
-        $phone     = trim($_POST['phone'] ?? '');
+        // B. Update Email at Phone sa users table
+        $updateUserQuery = "UPDATE users SET email = ?, phone = ? WHERE id = ?";
+        $stmtUser = mysqli_prepare($conn, $updateUserQuery);
+        if ($stmtUser) {
+            mysqli_stmt_bind_param($stmtUser, "ssi", $email, $phone, $userId);
+            if (!mysqli_stmt_execute($stmtUser)) {
+                $hasError = true;
+            }
+            mysqli_stmt_close($stmtUser);
+        }
 
-        if (empty($firstname) || empty($lastname) || empty($email)) {
-            $_SESSION['errorMsg'] = "First Name, Last Name, and Email are required.";
+        if (!$hasError) {
+            $successMsg = "Profile updated successfully!";
         } else {
-            if ($employeeId > 0) {
-                $updateStmt = mysqli_prepare($conn, "UPDATE employees SET firstname = ?, lastname = ?, email = ?, phone = ? WHERE id = ?");
-                if ($updateStmt) {
-                    mysqli_stmt_bind_param($updateStmt, "ssssi", $firstname, $lastname, $email, $phone, $employeeId);
-                    mysqli_stmt_execute($updateStmt);
-                    mysqli_stmt_close($updateStmt);
-                    $_SESSION['successMsg'] = "Profile updated successfully!";
-                }
-            }
+            $errorMsg = "Failed to update profile details.";
         }
-
-        header("Location: employee_profile.php" . ($employeeId > 0 ? "?id=" . $employeeId : ""));
-        exit();
+    } else {
+        $errorMsg = "First name and last name cannot be empty.";
     }
+} 
 
-    $fullName = trim(($employee['firstname'] ?? '') . ' ' . ($employee['lastname'] ?? ''));
-    $firstInitial = !empty($employee['firstname']) ? substr($employee['firstname'], 0, 1) : 'E';
-    $lastInitial  = !empty($employee['lastname']) ? substr($employee['lastname'], 0, 1) : 'P';
-    $initials     = strtoupper($firstInitial . $lastInitial);
+/* ------------------------------------------------------------
+   2. FETCH DEPARTMENT HEAD DETAILS
+   ------------------------------------------------------------ */
+$query = "SELECT 
+            u.id AS user_id,
+            u.username,
+            u.email,
+            u.phone,
+            u.role,
+            d.department_name,
+            d.department_head
+          FROM users u
+          LEFT JOIN departments d ON (
+              LOWER(TRIM(d.department_head)) LIKE CONCAT('%', LOWER(TRIM(u.username)), '%')
+              OR u.role = 'department head'
+          )
+          WHERE u.id = ? 
+          LIMIT 1";
+
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, "i", $userId);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$userProfile = mysqli_fetch_assoc($result);
+mysqli_stmt_close($stmt);
+
+if (!$userProfile) {
+    echo "Profile record not found.";
+    exit();
+}
+
+// Split Name into First Name & Last Name
+$rawName = !empty($userProfile['department_head']) ? trim($userProfile['department_head']) : ucfirst($userProfile['username']);
+$nameParts = explode(' ', $rawName);
+$firstName = $nameParts[0] ?? '';
+$lastName = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : '';
+
+// Data Mapping
+$fullName = $rawName;
+$initials = strtoupper(substr($firstName, 0, 1) . ($lastName ? substr($lastName, 0, 1) : ''));
+
+$employee = [
+    'firstname'         => $firstName,
+    'lastname'          => $lastName,
+    'email'             => !empty($userProfile['email']) ? $userProfile['email'] : strtolower($userProfile['username']) . '@gmail.com',
+    'phone'             => !empty($userProfile['phone']) ? $userProfile['phone'] : 'Not provided',
+    'employee_id'       => 'N/A (Dept Head)',
+    'department'        => !empty($userProfile['department_name']) ? $userProfile['department_name'] : 'Information Technology',
+    'position'          => 'Department Head',
+    'employment_status' => 'Active'
+];
+
+$isSelfProfile = true;
+$isDepartmentHead = true;
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,14 +136,6 @@
                 </div>
             </div>
 
-            <?php if (!empty($successMsg)): ?>
-                <div class="alert-banner success"><?php echo htmlspecialchars($successMsg); ?></div>
-            <?php endif; ?>
-
-            <?php if (!empty($errorMsg)): ?>
-                <div class="alert-banner error"><?php echo htmlspecialchars($errorMsg); ?></div>
-            <?php endif; ?>
-
             <!-- PROFILE HEADER -->
             <section class="profile-header-card">
                 <div class="profile-header-content">
@@ -167,7 +158,6 @@
 
                     <div class="profile-header-action">
                         <?php 
-                        // I-check kung sariling profile OR kung Department Head na nakalog-in
                         $canEdit = (isset($isSelfProfile) && $isSelfProfile) || (isset($isDepartmentHead) && $isDepartmentHead);
                         ?>
 
@@ -202,12 +192,12 @@
 
                     <div class="profile-info-item">
                         <span class="profile-info-label">Email Address</span>
-                        <span class="profile-info-value"><?php echo htmlspecialchars($employee['email'] ?? 'Not provided'); ?></span>
+                        <span class="profile-info-value"><?php echo htmlspecialchars($employee['email']); ?></span>
                     </div>
 
                     <div class="profile-info-item">
                         <span class="profile-info-label">Phone Number</span>
-                        <span class="profile-info-value"><?php echo htmlspecialchars($employee['phone'] ?? 'Not provided'); ?></span>
+                        <span class="profile-info-value"><?php echo htmlspecialchars($employee['phone']); ?></span>
                     </div>
                 </div>
             </section>
@@ -261,7 +251,7 @@
             <button type="button" class="modal-close" id="closeEditModalBtn" style="background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
         </div>
 
-        <form action="employee_profile.php<?php echo ($employeeId > 0) ? '?id=' . $employeeId : ''; ?>" method="POST">
+        <form action="department_head_profile.php" method="POST">
             <input type="hidden" name="action" value="update_profile">
 
             <div class="modal-body">

@@ -95,115 +95,62 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <?php
+                        <?php if ($departmentHeadsQuery && mysqli_num_rows($departmentHeadsQuery) > 0): ?>
+                            <?php while ($head = mysqli_fetch_assoc($departmentHeadsQuery)): 
+                                $fullname = $head['fullname'] ?? 'N/A';
+                                $departmentName = $head['department_name'] ?? 'Not Assigned';
+                                $username = $head['username'] ?? 'N/A';
+                                $departmentStatus = $head['department_status'] ?? 'Inactive';
 
-                            if ($departmentHeadsQuery && mysqli_num_rows($departmentHeadsQuery) > 0):
-                                while ($head = mysqli_fetch_assoc($departmentHeadsQuery)):
-                                    $fullname = $head['fullname'];
-                                    $departmentName = $head['department_name'] ?? 'Not Assigned';
-                                    $username = $head['username'];
-                                    $departmentStatus = $head['department_status'] ?? 'Inactive';
-
-                                    // ========================================
-                                    // INITIALS
-                                    // ========================================
-
-                                    $words = explode(' ', $fullname);
-                                    $initials = '';
-
-                                    foreach ($words as $word) {
-                                        if (!empty($word)) {
-                                            $initials .= strtoupper(substr($word, 0, 1));
-                                        }
+                                // Initials logic
+                                $words = explode(' ', $fullname);
+                                $initials = '';
+                                foreach ($words as $word) {
+                                    if (!empty($word)) {
+                                        $initials .= strtoupper(substr($word, 0, 1));
                                     }
+                                }
+                                $initials = substr($initials, 0, 2);
 
-                                    $initials = substr($initials, 0, 2);
-
-                                    // ========================================
-                                    // STATUS CLASS
-                                    // ========================================
-
-                                    if ($departmentStatus === 'Active') {
-                                        $statusClass = 'present';
-                                    } 
-                                    else {
-                                        $statusClass = 'absent';
-                                    }
-
-                        ?>
-
-                            <tr>
-
-                                <!-- ==========================
-                                    NAME
-                                ========================== -->
-                                <td>
-                                    <div class="employee-name">
-                                        <div class="emp-avatar blue-bg">
-                                            <?php echo htmlspecialchars($initials);?>
+                                $statusClass = ($departmentStatus === 'Active') ? 'present' : 'absent';
+                            ?>
+                                <tr>
+                                    <td>
+                                        <div class="employee-name">
+                                            <div class="emp-avatar blue-bg">
+                                                <?php echo htmlspecialchars($initials); ?>
+                                            </div>
+                                            <?php echo htmlspecialchars($fullname); ?>
                                         </div>
-                                        <?php echo htmlspecialchars($fullname);?>
-                                    </div>
-                                </td>
-
-
-                                <!-- ==========================
-                                    DEPARTMENT
-                                ========================== -->
-
-                                <td><?php echo htmlspecialchars($departmentName);?></td>
-
-                                <!-- ==========================
-                                    USERNAME
-                                ========================== -->
-
-                                <td><?php echo htmlspecialchars($username);?></td>
-
-                                <!-- ==========================
-                                    STATUS
-                                ========================== -->
-
-                                <td>
-                                    <span class="status-badge <?php echo $statusClass;?>">
-                                        <?php echo htmlspecialchars($departmentStatus);?>
-                                    </span>
-                                </td>
-
-
-                                <!-- ==========================
-                                    ACTION
-                                ========================== -->
-
-                                <td class="action-buttons">
-
-                                    <button
-                                        type="button"
-                                        class="edit-btn"
-                                        onclick="window.location.href='edit_department_head.php?id=<?php echo $head['user_id']; ?>'">
-                                        Edit
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        class="employee-delete-btn delete-btn"
-                                        data-id="<?php echo $head['user_id']; ?>"
-                                        data-name="<?php echo htmlspecialchars($fullname); ?>"
-                                        data-type="department_head">
-                                        Delete
-                                    </button>
-
-                                </td>
-                            </tr>
-                        <?php
-                            endwhile;
-                            else:
-                        ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($departmentName); ?></td>
+                                    <td><?php echo htmlspecialchars($username); ?></td>
+                                    <td>
+                                        <span class="status-badge <?php echo $statusClass; ?>">
+                                            <?php echo htmlspecialchars($departmentStatus); ?>
+                                        </span>
+                                    </td>
+                                    <td class="action-buttons">
+                                        <button type="button" 
+                                                class="btn edit-btn" 
+                                                onclick="window.location.href='edit_department_head.php?id=<?php echo urlencode($head['user_id']); ?>';">
+                                            Edit
+                                        </button>
+                                        <button type="button" 
+                                                class="employee-delete-btn delete-btn" 
+                                                data-id="<?php echo $head['user_id']; ?>" 
+                                                data-name="<?php echo htmlspecialchars($fullname); ?>" 
+                                                data-type="department_head">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
                             <tr>
-                                <td colspan="5" style="text-align:center;">
-                                    No department heads found.
-                                </td>
+                                <td colspan="5" style="text-align:center;">No department heads found.</td>
                             </tr>
-                            <?php endif; ?>
+                        <?php endif; ?>
                         </tbody>
                     </table>
                 </div>

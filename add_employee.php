@@ -150,7 +150,7 @@
                 <?php endif; ?>
             </select>
         </div>
-
+        
         <div class="input-group">
             <label for="position">Position</label>
             <input type="text" id="position" name="position" class="inputs" placeholder="Job title" required>

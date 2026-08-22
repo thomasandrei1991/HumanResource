@@ -186,6 +186,7 @@
                     
                     <div class="employee-panel">
                         <table class="dashboard-table employee-table">
+                            <table class="dashboard-table employee-table">
                             <thead id="thead">
                                 <tr>
                                     <th>Department</th>
@@ -197,36 +198,28 @@
                             </thead>
                             <tbody id="departmentTableBody">
                             <?php if ($departmentQuery && mysqli_num_rows($departmentQuery) > 0): ?>
-                                <?php while ($department = mysqli_fetch_assoc($departmentQuery)): ?>
-                                    <?php
-                                        $departmentName = $department['department_name'];
-                                        $departmentHead = $department['department_head'];
-                                        $status = $department['status'];
+                                <?php while ($department = mysqli_fetch_assoc($departmentQuery)): 
+                                    $departmentName = $department['department_name'];
+                                    $departmentHead = $department['department_head'];
+                                    $status = $department['status'];
+                                    $totalEmployees = $department['total_employees'] ?? 0;
 
-                                        // Generate department initials
-                                        $words = explode(' ', $departmentName);
-                                        $initials = '';
-                                        foreach ($words as $word) {
-                                            if (!empty($word)) {
-                                                $initials .= strtoupper(substr($word, 0, 1));
-                                            }
+                                    $words = explode(' ', $departmentName);
+                                    $initials = '';
+                                    foreach ($words as $word) {
+                                        if (!empty($word)) {
+                                            $initials .= strtoupper(substr($word, 0, 1));
                                         }
-                                        $initials = substr($initials, 0, 2);
+                                    }
+                                    $initials = substr($initials, 0, 2);
 
-                                        // Status CSS class
-                                        switch ($status) {
-                                            case 'Active':
-                                                $statusClass = 'present';
-                                                break;
-                                            case 'Inactive':
-                                                $statusClass = 'absent';
-                                                break;
-                                            default:
-                                                $statusClass = 'pending';
-                                        }
-                                    ?>
+                                    switch ($status) {
+                                        case 'Active': $statusClass = 'present'; break;
+                                        case 'Inactive': $statusClass = 'absent'; break;
+                                        default: $statusClass = 'pending';
+                                    }
+                                ?>
                                     <tr>
-                                        <!-- Department -->
                                         <td>
                                             <div class="employee-name">
                                                 <div class="emp-avatar blue-bg">
@@ -235,46 +228,26 @@
                                                 <?php echo htmlspecialchars($departmentName); ?>
                                             </div>
                                         </td>
-                                        
-                                        <!-- Department Head -->
                                         <td>
-                                            <?php
-                                                echo !empty($departmentHead)
-                                                    ? htmlspecialchars($departmentHead)
-                                                    : 'Not Assigned';
-                                            ?>
+                                            <?php echo !empty($departmentHead) ? htmlspecialchars($departmentHead) : 'Not Assigned'; ?>
                                         </td>
-                                        
-                                        <!-- Total Employees -->
-                                        <td>
-                                            <?php
-                                                $employeeCountQuery = mysqli_query(
-                                                    $conn,
-                                                    "SELECT COUNT(*) AS total
-                                                    FROM employees
-                                                    WHERE department = '" . mysqli_real_escape_string($conn, $departmentName) . "'"
-                                                );
-                                                $employeeCount = mysqli_fetch_assoc($employeeCountQuery)['total'] ?? 0;
-                                                echo $employeeCount;
-                                            ?>
-                                        </td>
-                                        
-                                        <!-- Status -->
+                                        <td><?php echo $totalEmployees; ?></td>
                                         <td>
                                             <span class="status-badge <?php echo $statusClass; ?>">
                                                 <?php echo htmlspecialchars($status); ?>
                                             </span>
                                         </td>
-                                        
-                                        <!-- Action -->
                                         <td class="action-buttons">
-                                            <button type="button" class="edit-btn" onclick="window.location.href='edit_department.php?id=<?php echo $department['id']; ?>'">
+                                            <button type="button" 
+                                                    class="btn edit-btn" 
+                                                    onclick="window.location.href='edit_department.php?id=<?php echo $department['id']; ?>'">
                                                 Edit
                                             </button>
-                                            <button type="button" class="employee-delete-btn delete-btn" 
-                                                data-id="<?php echo $department['id']; ?>"
-                                                data-type="department"
-                                                data-name="<?php echo htmlspecialchars($departmentName); ?>">
+                                            <button type="button" 
+                                                    class="employee-delete-btn delete-btn" 
+                                                    data-id="<?php echo $department['id']; ?>" 
+                                                    data-type="department" 
+                                                    data-name="<?php echo htmlspecialchars($departmentName); ?>">
                                                 Delete
                                             </button>
                                         </td>
@@ -282,9 +255,7 @@
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5" style="text-align: center;">
-                                        No departments found.
-                                    </td>
+                                    <td colspan="5" style="text-align: center;">No departments found.</td>
                                 </tr>
                             <?php endif; ?>
                             </tbody>

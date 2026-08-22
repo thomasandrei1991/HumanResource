@@ -1,21 +1,14 @@
 <?php
-// Load the database connection ($conn) from database.php
-include 'database.php';
-
-// Query to get every employee's id, firstname, and lastname,
-// sorted alphabetically by firstname — used to populate the
-// employee dropdown below
-$sql = "SELECT id, firstname, lastname FROM employees ORDER BY firstname ASC";
-
-// Run the query and store the result set (a mysqli_result object) in $result
-$result = mysqli_query($conn, $sql);
+// This file is meant to be included from leave_management.php,
+// which already ran session_start(), validated the user, loaded
+// database.php, and computed $employeeId for the logged-in Employee.
+// We simply reuse those variables here.
 ?>
 
 <!-- ==========================
      LEAVE REQUEST FORM
-     Hidden by default ("hidden" class) — likely toggled visible via
-     JS (e.g. a "File Leave Request" button, similar to the pattern
-     used for the attendance and employee forms)
+     Hidden by default ("hidden" class) — toggled visible via JS
+     when the "+ New Leave" button is clicked
 ========================== -->
 <div id="leaveFormPanel" class="leave-form-wrapper hidden">
 
@@ -28,39 +21,29 @@ $result = mysqli_query($conn, $sql);
 
         <!-- ==========================
              EMPLOYEE
+             Readonly — auto-filled from the logged-in session.
+             Employees cannot file leave on behalf of someone else.
         ========================== -->
         <div class="input-group">
             <label for="employee">Employee</label>
 
-            <select id="employee" name="employee_id" class="inputs" required>
+            <input
+                type="text"
+                id="employee"
+                class="inputs"
+                value="<?php echo htmlspecialchars($_SESSION['fullname'] ?? ''); ?>"
+                readonly
+            >
 
-                <!-- Disabled placeholder option so nothing gets submitted
-                     unless the user actually picks a real employee -->
-                <option value="" disabled selected>Select employee</option>
-
-                <?php
-                // Only loop if the query succeeded and returned at least one row
-                if (isset($result) && $result && mysqli_num_rows($result) > 0):
-                    while ($row = mysqli_fetch_assoc($result)):
-                ?>
-                    <option value="<?php echo htmlspecialchars($row['id']); ?>">
-                        <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?>
-                    </option>
-                <?php
-                    endwhile;
-                else:
-                ?>
-                    <!-- Fallback shown if the employees table is empty or the query failed -->
-                    <option value="" disabled>No employees available</option>
-                <?php endif; ?>
-
-            </select>
+            <input
+                type="hidden"
+                name="employee_id"
+                value="<?php echo htmlspecialchars($employeeId ?? ''); ?>"
+            >
         </div>
 
         <!-- ==========================
              LEAVE TYPE
-             Fixed dropdown of leave categories — no "Other" option,
-             so any leave type not listed here can't be filed
         ========================== -->
         <div class="input-group">
             <label for="leaveType">Leave Type</label>
@@ -94,11 +77,8 @@ $result = mysqli_query($conn, $sql);
 
         <!-- ==========================
              TOTAL DAYS
-             readonly — meant to be auto-calculated by JS from
-             (End Date - Start Date), not typed in manually.
-             NOTE: no JS for this calculation was included in the
-             script.js file shared earlier, so this field currently
-             won't populate itself unless that logic exists elsewhere.
+             Auto-calculated by JS (already handled in leave_management.php's
+             <script> block via calculateLeaveDays())
         ========================== -->
         <div class="input-group">
             <label for="totalDays">Total Days</label>
@@ -113,16 +93,7 @@ $result = mysqli_query($conn, $sql);
             <textarea id="reason" name="reason" class="inputs" rows="4" placeholder="Briefly explain the reason for this leave request" required></textarea>
         </div>
 
-        <!-- ==========================
-             STATUS
-             New leave requests are always Pending. Employee should
-             not be able to choose Approved or Rejected — hardcoded
-             as a hidden field so it can't be tampered with via the
-             visible UI (though it can still be edited via browser
-             devtools or a raw POST request, so add_leave_process.php
-             should not blindly trust this value if approval logic
-             matters server-side).
-        ========================== -->
+        <!-- Always Pending on creation -->
         <input type="hidden" name="status" value="Pending">
 
         <!-- ==========================
@@ -130,7 +101,6 @@ $result = mysqli_query($conn, $sql);
         ========================== -->
         <div class="form-actions">
             <button type="submit" class="primary-btn">Save</button>
-            <!-- type="button" — doesn't submit the form, needs JS to hide the panel -->
             <button type="button" class="primary-btn" id="cancelLeaveBtn">Cancel</button>
         </div>
     </form>

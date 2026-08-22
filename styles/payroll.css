@@ -7,3 +7,65 @@
 }
 
 /* Payroll page-specific styles */
+
+.employee-panel {
+    max-height: 480px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 8px;
+
+    /* Itago ang scrollbar para sa Firefox at IE/Edge */
+    -ms-overflow-style: none;  /* IE at Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+/* Itago ang scrollbar para sa Chrome, Safari, at Edge/Opera (WebKit) */
+.employee-panel::-webkit-scrollbar {
+    display: none;
+}
+
+/* Sticky Table Header */
+.dashboard-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8fafc;
+    z-index: 10;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.employee-panel {
+  /* Tumatago sa scrollbar para sa Firefox at IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /* Pinapanatili ang kakayahang mag-scroll kung kinakailangan */
+  overflow: auto; 
+}
+
+/* Tumatago sa scrollbar para sa Chrome, Safari, at Opera */
+.employee-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.employee-panel {
+  /* 1. Pinapayagan ang container na magbago ang taas batay sa nilalaman */
+  height: auto !important;
+  
+  /* 2. Tinatanggal ang minimum height restriction */
+  min-height: 0 !important;
+  
+  /* 3. Inaalis ang maximum height limit para hindi magka-fixed height */
+  max-height: none !important;
+  
+  /* 4. Kapag naka-flexbox ang parent container, pinipigilan nitong umawat o mag-stretch */
+  flex: 0 1 auto !important; 
+}
+
+/* Siguraduhing walang fixed height sa mismong table at rows */
+.employee-table {
+  width: 100%;
+  height: auto;
+}
+
+.employee-table tr {
+  height: auto;
+}

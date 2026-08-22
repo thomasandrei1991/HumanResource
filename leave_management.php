@@ -1,369 +1,254 @@
 <?php
 
-session_start();
+    session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
-require_once 'database.php';
+    require_once 'database.php';
 
-$currentPage = basename($_SERVER['PHP_SELF']);
-$userRole = $_SESSION['role'] ?? '';
-$userId = intval($_SESSION['user_id']);
+    $currentPage = basename($_SERVER['PHP_SELF']);
+    $userRoleRaw = $_SESSION['role'] ?? '';
+    $userRole = trim(preg_replace('/[\s\x{00A0}]+/u', ' ', $userRoleRaw));
+    $userId = intval($_SESSION['user_id']);
 
-
-// ==========================================================
-// ACCESS CHECK
-// ==========================================================
-
-if ($userRole !== 'Employee' && $userRole !== 'Department Head') {
-    header("Location: dashboard.php");
-    exit();
-}
+    $isDepartmentHead = (strcasecmp($userRole, 'Department Head') === 0);
+    $isEmployee = (strcasecmp($userRole, 'Employee') === 0);
 
 
-// ==========================================================
-// VARIABLES
-// ==========================================================
+    // ==========================================================
+    // ACCESS CHECK
+    // ==========================================================
 
-$employeeId = null;
-$departmentName = '';
+    if ($userRole !== 'Employee' && $userRole !== 'Department Head') {
+        header("Location: dashboard.php");
+        exit();
+    }
 
 
-// ==========================================================
-// EMPLOYEE ACCOUNT
-// ==========================================================
+    // ==========================================================
+    // VARIABLES
+    // ==========================================================
 
-if ($userRole === 'Employee') {
+    $employeeId = null;
+    $departmentName = '';
 
-    /*
-     * users.employee_id points to employees.id
-     */
-    $userStmt = mysqli_prepare(
-        $conn,
-        "SELECT employee_id
-         FROM users
-         WHERE id = ?
-         LIMIT 1"
-    );
 
-    if ($userStmt) {
+    // ==========================================================
+    // EMPLOYEE ACCOUNT
+    // ==========================================================
 
-        mysqli_stmt_bind_param(
-            $userStmt,
-            "i",
-            $userId
-        );
+    if ($userRole === 'Employee') {
 
-        mysqli_stmt_execute($userStmt);
+        /*
+        * users.employee_id points to employees.id
+        */
+        $userStmt = mysqli_prepare($conn, "SELECT employee_id FROM users WHERE id = ? LIMIT 1");
 
-        $userResult = mysqli_stmt_get_result($userStmt);
+        if ($userStmt) {
+            mysqli_stmt_bind_param($userStmt, "i", $userId);
+            mysqli_stmt_execute($userStmt);
+            $userResult = mysqli_stmt_get_result($userStmt);
+            if ($userData = mysqli_fetch_assoc($userResult)) {
+                $employeeId = intval($userData['employee_id']);
+            }
 
-        if ($userData = mysqli_fetch_assoc($userResult)) {
-            $employeeId = intval($userData['employee_id']);
+            mysqli_stmt_close($userStmt);
         }
 
-        mysqli_stmt_close($userStmt);
+
+        if (!$employeeId) {
+            die("Employee account is not properly linked to an employee record.");
+        }
     }
 
 
-    if (!$employeeId) {
-        die("Employee account is not properly linked to an employee record.");
-    }
-}
+    // ==========================================================
+    // DEPARTMENT HEAD ACCOUNT
+    // ==========================================================
 
-
-// ==========================================================
-// DEPARTMENT HEAD ACCOUNT
-// ==========================================================
-
-if ($userRole === 'Department Head') {
-
-    $headName = $_SESSION['fullname'] ?? '';
-
-    /*
-     * Find the department assigned to this Department Head
-     */
-    $deptStmt = mysqli_prepare(
-        $conn,
-        "SELECT department_name
-         FROM departments
-         WHERE department_head = ?
-         AND status = 'Active'
-         LIMIT 1"
-    );
-
-    if ($deptStmt) {
-
-        mysqli_stmt_bind_param(
-            $deptStmt,
-            "s",
-            $headName
+    if ($userRole === 'Department Head') {
+        $headName = $_SESSION['fullname'] ?? '';
+        /*
+        * Find the department assigned to this Department Head
+        */
+        $deptStmt = mysqli_prepare(
+            $conn,
+            "SELECT department_name
+            FROM departments
+            WHERE department_head = ?
+            AND status = 'Active'
+            LIMIT 1"
         );
 
-        mysqli_stmt_execute($deptStmt);
+        if ($deptStmt) {
+            mysqli_stmt_bind_param($deptStmt, "s", $headName);
+            mysqli_stmt_execute($deptStmt);
+            $deptResult = mysqli_stmt_get_result($deptStmt);
+            if ($deptData = mysqli_fetch_assoc($deptResult)) {
+                $departmentName = $deptData['department_name'] ?? '';
+            }
 
-        $deptResult = mysqli_stmt_get_result($deptStmt);
-
-        if ($deptData = mysqli_fetch_assoc($deptResult)) {
-            $departmentName = $deptData['department_name'] ?? '';
+            mysqli_stmt_close($deptStmt);
         }
 
-        mysqli_stmt_close($deptStmt);
+
+        if (empty($departmentName)) {
+            die("No active department is assigned to this Department Head.");
+        }
     }
 
 
-    if (empty($departmentName)) {
-        die("No active department is assigned to this Department Head.");
-    }
-}
+    // ==========================================================
+    // GET LEAVE REQUESTS
+    // ==========================================================
 
+    $leaveSql = "
+        SELECT
+            leave_requests.id,
+            leave_requests.employee_id,
+            leave_requests.leave_type,
+            leave_requests.start_date,
+            leave_requests.end_date,
+            leave_requests.total_days,
+            leave_requests.reason,
+            leave_requests.status,
+            leave_requests.created_at,
 
-// ==========================================================
-// GET LEAVE REQUESTS
-// ==========================================================
+            employees.firstname,
+            employees.lastname,
+            employees.department
 
-$leaveSql = "
-    SELECT
-        leave_requests.id,
-        leave_requests.employee_id,
-        leave_requests.leave_type,
-        leave_requests.start_date,
-        leave_requests.end_date,
-        leave_requests.total_days,
-        leave_requests.reason,
-        leave_requests.status,
-        leave_requests.created_at,
+        FROM leave_requests
 
-        employees.firstname,
-        employees.lastname,
-        employees.department
-
-    FROM leave_requests
-
-    INNER JOIN employees
-        ON leave_requests.employee_id = employees.id
-";
-
-
-// ==========================================================
-// EMPLOYEE FILTER
-// ==========================================================
-
-if ($userRole === 'Employee') {
-
-    $leaveSql .= "
-        WHERE leave_requests.employee_id = ?
-    ";
-
-    $leaveSql .= "
-        ORDER BY leave_requests.created_at DESC
-    ";
-
-    $leaveStmt = mysqli_prepare($conn, $leaveSql);
-
-    mysqli_stmt_bind_param(
-        $leaveStmt,
-        "i",
-        $employeeId
-    );
-
-    mysqli_stmt_execute($leaveStmt);
-
-    $leaveResult = mysqli_stmt_get_result($leaveStmt);
-}
-
-
-// ==========================================================
-// DEPARTMENT HEAD FILTER
-// ==========================================================
-
-else {
-
-    $leaveSql .= "
-        WHERE LOWER(employees.department) = LOWER(?)
-    ";
-
-    $leaveSql .= "
-        ORDER BY leave_requests.created_at DESC
-    ";
-
-    $leaveStmt = mysqli_prepare($conn, $leaveSql);
-
-    mysqli_stmt_bind_param(
-        $leaveStmt,
-        "s",
-        $departmentName
-    );
-
-    mysqli_stmt_execute($leaveStmt);
-
-    $leaveResult = mysqli_stmt_get_result($leaveStmt);
-}
-
-
-// ==========================================================
-// SUMMARY COUNTS
-// ==========================================================
-
-$pendingCount = 0;
-$approvedCount = 0;
-$rejectedCount = 0;
-$onLeaveCount = 0;
-
-
-// Base summary query
-$summarySql = "
-    SELECT
-        SUM(status = 'Pending') AS pending_count,
-        SUM(status = 'Approved') AS approved_count,
-        SUM(status = 'Rejected') AS rejected_count
-    FROM leave_requests
-";
-
-
-// Employee summary
-if ($userRole === 'Employee') {
-
-    $summarySql .= "
-        WHERE employee_id = ?
-    ";
-
-    $summaryStmt = mysqli_prepare(
-        $conn,
-        $summarySql
-    );
-
-    mysqli_stmt_bind_param(
-        $summaryStmt,
-        "i",
-        $employeeId
-    );
-
-}
-
-
-// Department Head summary
-else {
-
-    $summarySql .= "
         INNER JOIN employees
             ON leave_requests.employee_id = employees.id
-
-        WHERE LOWER(employees.department) = LOWER(?)
     ";
 
-    $summaryStmt = mysqli_prepare(
-        $conn,
-        $summarySql
-    );
 
-    mysqli_stmt_bind_param(
-        $summaryStmt,
-        "s",
-        $departmentName
-    );
-}
+    // ==========================================================
+    // EMPLOYEE FILTER
+    // ==========================================================
+
+    if ($userRole === 'Employee') {
+        $leaveSql .= " WHERE leave_requests.employee_id = ? ";
+        $leaveSql .= "ORDER BY leave_requests.created_at DESC";
+        $leaveStmt = mysqli_prepare($conn, $leaveSql);
+        mysqli_stmt_bind_param($leaveStmt, "i", $employeeId);
+        mysqli_stmt_execute($leaveStmt);
+        $leaveResult = mysqli_stmt_get_result($leaveStmt);
+    }
 
 
-if ($summaryStmt) {
+    // ==========================================================
+    // DEPARTMENT HEAD FILTER
+    // ==========================================================
 
-    mysqli_stmt_execute($summaryStmt);
+    else {
+        $leaveSql .= " WHERE LOWER(employees.department) = LOWER(?) ";
+        $leaveSql .= "ORDER BY leave_requests.created_at DESC";
+        $leaveStmt = mysqli_prepare($conn, $leaveSql);
+        mysqli_stmt_bind_param($leaveStmt, "s", $departmentName);
+        mysqli_stmt_execute($leaveStmt);
+        $leaveResult = mysqli_stmt_get_result($leaveStmt);
+    }
 
-    $summaryResult = mysqli_stmt_get_result($summaryStmt);
 
-    if ($summaryData = mysqli_fetch_assoc($summaryResult)) {
+    // ==========================================================
+    // SUMMARY COUNTS
+    // ==========================================================
 
-        $pendingCount = intval(
-            $summaryData['pending_count'] ?? 0
+    $pendingCount = 0;
+    $approvedCount = 0;
+    $rejectedCount = 0;
+    $onLeaveCount = 0;
+
+
+    // Base summary query
+    $summarySql = "
+        SELECT
+            SUM(status = 'Pending') AS pending_count,
+            SUM(status = 'Approved') AS approved_count,
+            SUM(status = 'Rejected') AS rejected_count
+        FROM leave_requests
+    ";
+
+
+    // Employee summary
+    if ($userRole === 'Employee') {
+        $summarySql .= " WHERE employee_id = ?";
+        $summaryStmt = mysqli_prepare($conn, $summarySql);
+        mysqli_stmt_bind_param($summaryStmt, "i", $employeeId);
+    }
+
+
+    // Department Head summary
+    else {
+        $summarySql .= " INNER JOIN employees ON leave_requests.employee_id = employees.id WHERE LOWER(employees.department) = LOWER(?)";
+        $summaryStmt = mysqli_prepare($conn, $summarySql);
+        mysqli_stmt_bind_param($summaryStmt, "s", $departmentName);
+    }
+
+
+    if ($summaryStmt) {
+        mysqli_stmt_execute($summaryStmt);
+        $summaryResult = mysqli_stmt_get_result($summaryStmt);
+        if ($summaryData = mysqli_fetch_assoc($summaryResult)) {
+            $pendingCount = intval($summaryData['pending_count'] ?? 0);
+            $approvedCount = intval($summaryData['approved_count'] ?? 0);
+            $rejectedCount = intval($summaryData['rejected_count'] ?? 0);
+        }
+        mysqli_stmt_close($summaryStmt);
+    }
+
+
+    // ==========================================================
+    // ON LEAVE COUNT
+    // ==========================================================
+
+    $today = date('Y-m-d');
+    $onLeaveSql = "SELECT COUNT(*) AS on_leave_count FROM leave_requests";
+
+    if ($userRole === 'Employee') {
+        $onLeaveSql .= " WHERE employee_id = ? AND status = 'Approved' AND ? BETWEEN start_date AND end_date";
+        $onLeaveStmt = mysqli_prepare($conn, $onLeaveSql);
+        mysqli_stmt_bind_param($onLeaveStmt, "is", $employeeId, $today);
+
+    } else {
+
+        $onLeaveSql .= " INNER JOIN employees ON leave_requests.employee_id = employees.id
+            WHERE LOWER(employees.department) = LOWER(?)
+            AND leave_requests.status = 'Approved'
+            AND ? BETWEEN leave_requests.start_date
+            AND leave_requests.end_date
+        ";
+
+        $onLeaveStmt = mysqli_prepare(
+            $conn,
+            $onLeaveSql
         );
 
-        $approvedCount = intval(
-            $summaryData['approved_count'] ?? 0
-        );
-
-        $rejectedCount = intval(
-            $summaryData['rejected_count'] ?? 0
+        mysqli_stmt_bind_param(
+            $onLeaveStmt,
+            "ss",
+            $departmentName,
+            $today
         );
     }
 
-    mysqli_stmt_close($summaryStmt);
-}
 
+    if ($onLeaveStmt) {
+        mysqli_stmt_execute($onLeaveStmt);
+        $onLeaveResult = mysqli_stmt_get_result($onLeaveStmt);
 
-// ==========================================================
-// ON LEAVE COUNT
-// ==========================================================
+        if ($onLeaveData = mysqli_fetch_assoc($onLeaveResult)) {
+            $onLeaveCount = intval($onLeaveData['on_leave_count'] ?? 0);
+        }
 
-$today = date('Y-m-d');
-
-$onLeaveSql = "
-    SELECT COUNT(*) AS on_leave_count
-    FROM leave_requests
-";
-
-if ($userRole === 'Employee') {
-
-    $onLeaveSql .= "
-        WHERE employee_id = ?
-        AND status = 'Approved'
-        AND ? BETWEEN start_date AND end_date
-    ";
-
-    $onLeaveStmt = mysqli_prepare(
-        $conn,
-        $onLeaveSql
-    );
-
-    mysqli_stmt_bind_param(
-        $onLeaveStmt,
-        "is",
-        $employeeId,
-        $today
-    );
-
-} else {
-
-    $onLeaveSql .= "
-        INNER JOIN employees
-            ON leave_requests.employee_id = employees.id
-
-        WHERE LOWER(employees.department) = LOWER(?)
-        AND leave_requests.status = 'Approved'
-        AND ? BETWEEN leave_requests.start_date
-                  AND leave_requests.end_date
-    ";
-
-    $onLeaveStmt = mysqli_prepare(
-        $conn,
-        $onLeaveSql
-    );
-
-    mysqli_stmt_bind_param(
-        $onLeaveStmt,
-        "ss",
-        $departmentName,
-        $today
-    );
-}
-
-
-if ($onLeaveStmt) {
-
-    mysqli_stmt_execute($onLeaveStmt);
-
-    $onLeaveResult = mysqli_stmt_get_result($onLeaveStmt);
-
-    if ($onLeaveData = mysqli_fetch_assoc($onLeaveResult)) {
-        $onLeaveCount = intval(
-            $onLeaveData['on_leave_count'] ?? 0
-        );
+        mysqli_stmt_close($onLeaveStmt);
     }
-
-    mysqli_stmt_close($onLeaveStmt);
-}
 
 ?>
 
@@ -413,32 +298,16 @@ if ($onLeaveStmt) {
                 =================================================== -->
 
                 <div class="page-header">
-
                     <div>
-
-                        <p class="page-kicker">
-                            Employee Leave
-                        </p>
-
-                        <h1>
-                            Leave Management
-                        </h1>
-
+                        <p class="page-kicker">Employee Leave</p>
+                        <h1>Leave Management</h1>
                     </div>
 
-
-                    <?php if ($userRole === 'Employee'): ?>
-
-                        <button
-                            type="button"
-                            class="primary-btn"
-                            id="newLeaveBtn"
-                        >
+                    <?php if (isset($userRole) && strcasecmp(trim($userRole), 'Employee') === 0): ?>
+                        <button type="button" class="primary-btn" id="newLeaveBtn">
                             + New Leave
                         </button>
-
                     <?php endif; ?>
-
                 </div>
 
 
@@ -468,225 +337,9 @@ if ($onLeaveStmt) {
                      EMPLOYEE LEAVE FORM
                 =================================================== -->
 
-                <?php if ($userRole === 'Employee'): ?>
+                <?php include 'leave_request.php'; ?>
 
-                    <div
-                        id="leaveFormPanel"
-                        class="leave-form-wrapper hidden"
-                    >
-
-                        <div class="panel-header">
-
-                            <h2>
-                                File Leave Request
-                            </h2>
-
-                        </div>
-
-
-                        <form
-                            action="add_leave_process.php"
-                            method="POST"
-                            id="leaveForm"
-                        >
-
-
-                            <!-- EMPLOYEE -->
-
-                            <div class="input-group">
-
-                                <label for="employee">
-                                    Employee
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="inputs"
-                                    value="<?php
-                                        echo htmlspecialchars(
-                                            ($_SESSION['fullname'] ?? '')
-                                        );
-                                    ?>"
-                                    readonly
-                                >
-
-                                <input
-                                    type="hidden"
-                                    name="employee_id"
-                                    value="<?php
-                                        echo htmlspecialchars($employeeId);
-                                    ?>"
-                                >
-
-                            </div>
-
-
-                            <!-- LEAVE TYPE -->
-
-                            <div class="input-group">
-
-                                <label for="leaveType">
-                                    Leave Type
-                                </label>
-
-                                <select
-                                    id="leaveType"
-                                    name="leave_type"
-                                    class="inputs"
-                                    required
-                                >
-
-                                    <option
-                                        value=""
-                                        disabled
-                                        selected
-                                    >
-                                        Select leave type
-                                    </option>
-
-                                    <option value="Vacation Leave">
-                                        Vacation Leave
-                                    </option>
-
-                                    <option value="Sick Leave">
-                                        Sick Leave
-                                    </option>
-
-                                    <option value="Emergency Leave">
-                                        Emergency Leave
-                                    </option>
-
-                                    <option value="Maternity/Paternity Leave">
-                                        Maternity/Paternity Leave
-                                    </option>
-
-                                    <option value="Bereavement Leave">
-                                        Bereavement Leave
-                                    </option>
-
-                                    <option value="Unpaid Leave">
-                                        Unpaid Leave
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <!-- START DATE -->
-
-                            <div class="input-group">
-
-                                <label for="startDate">
-                                    Start Date
-                                </label>
-
-                                <input
-                                    type="date"
-                                    id="startDate"
-                                    name="start_date"
-                                    class="inputs"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- END DATE -->
-
-                            <div class="input-group">
-
-                                <label for="endDate">
-                                    End Date
-                                </label>
-
-                                <input
-                                    type="date"
-                                    id="endDate"
-                                    name="end_date"
-                                    class="inputs"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- TOTAL DAYS -->
-
-                            <div class="input-group">
-
-                                <label for="totalDays">
-                                    Total Days
-                                </label>
-
-                                <input
-                                    type="number"
-                                    id="totalDays"
-                                    name="total_days"
-                                    class="inputs"
-                                    placeholder="Automatically calculated"
-                                    min="1"
-                                    step="1"
-                                    readonly
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- REASON -->
-
-                            <div class="input-group">
-
-                                <label for="reason">
-                                    Reason
-                                </label>
-
-                                <textarea
-                                    id="reason"
-                                    name="reason"
-                                    class="inputs"
-                                    rows="4"
-                                    placeholder="Briefly explain the reason for this leave request"
-                                    required
-                                ></textarea>
-
-                            </div>
-
-
-                            <input
-                                type="hidden"
-                                name="status"
-                                value="Pending"
-                            >
-
-
-                            <!-- ACTIONS -->
-
-                            <div class="form-actions">
-
-                                <button
-                                    type="submit"
-                                    class="primary-btn"
-                                >
-                                    Save
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="primary-btn"
-                                    id="cancelLeaveBtn"
-                                >
-                                    Cancel
-                                </button>
-
-                            </div>
-
-                        </form>
-
-                    </div>
-
-                <?php endif; ?>
+                
 
 
                 <!-- ==================================================

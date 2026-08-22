@@ -3,7 +3,7 @@
 session_start();
 require_once 'database.php';
 
-// Require login — bounce guests to the login page
+// 1. Require login — bounce guests to the login page
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -11,235 +11,273 @@ if (!isset($_SESSION['user_id'])) {
 
 // Current logged-in user
 $userId   = intval($_SESSION['user_id']);
-$userRole = $_SESSION['role'] ?? '';
+$userRole = strtolower(trim($_SESSION['role'] ?? ''));
 
 // Only Department Heads may view this page
-$isDepartmentHead = ($userRole === 'Department Head');
+$validHeadRoles = ['department head', 'dept head', 'dept_head'];
+$isDepartmentHead = in_array($userRole, $validHeadRoles, true);
+
 if (!$isDepartmentHead) {
     header("Location: dashboard.php");
     exit();
 }
 
-// Name of the logged-in department head (used to look up their department)
+// Name and Email of the logged-in department head
 $headName       = $_SESSION['fullname'] ?? '';
+$headEmail      = $_SESSION['email'] ?? '';
 $headDepartment = '';
 
 /* ------------------------------------------------------------
-   Find which department this person heads
+   1. FIND WHICH DEPARTMENT THIS PERSON HEADS
+   Order of Search:
+   a. Check employees table via Email
+   b. Check departments table via Head Name
+   c. Session fallback
    ------------------------------------------------------------ */
-$departmentStmt = mysqli_prepare(
-    $conn,
-    "SELECT department_name
-     FROM departments
-     WHERE department_head = ?
-     AND status = 'active'
-     LIMIT 1"
-);
 
-if ($departmentStmt) {
-    mysqli_stmt_bind_param($departmentStmt, "s", $headName);
-    mysqli_stmt_execute($departmentStmt);
-    $departmentResult = mysqli_stmt_get_result($departmentStmt);
-
-    if ($departmentResult && mysqli_num_rows($departmentResult) > 0) {
-        $departmentData = mysqli_fetch_assoc($departmentResult);
-        $headDepartment = $departmentData['department_name'] ?? '';
+// Step A: Kunin ang department mula sa employees table gamit ang Email
+if (!empty($headEmail)) {
+    $deptQuery = mysqli_prepare($conn, "SELECT department FROM employees WHERE LOWER(TRIM(email)) = LOWER(TRIM(?)) LIMIT 1");
+    if ($deptQuery) {
+        mysqli_stmt_bind_param($deptQuery, "s", $headEmail);
+        mysqli_stmt_execute($deptQuery);
+        $deptRes = mysqli_stmt_get_result($deptQuery);
+        if ($deptRow = mysqli_fetch_assoc($deptRes)) {
+            $headDepartment = trim($deptRow['department'] ?? '');
+        }
+        mysqli_stmt_close($deptQuery);
     }
-
-    mysqli_stmt_close($departmentStmt);
 }
 
+// Step B: Kung walang nahanap sa employees, i-check sa departments table
+// FIXED: tinanggal ang "head_email" column na hindi umiiral sa departments table
+if (empty($headDepartment) && !empty($headName)) {
+    $departmentStmt = mysqli_prepare(
+        $conn,
+        "SELECT department_name
+         FROM departments
+         WHERE LOWER(TRIM(department_head)) = LOWER(TRIM(?))
+         LIMIT 1"
+    );
+
+    if ($departmentStmt) {
+        mysqli_stmt_bind_param($departmentStmt, "s", $headName);
+        mysqli_stmt_execute($departmentStmt);
+        $departmentResult = mysqli_stmt_get_result($departmentStmt);
+
+        if ($departmentResult && mysqli_num_rows($departmentResult) > 0) {
+            $departmentData = mysqli_fetch_assoc($departmentResult);
+            $headDepartment = trim($departmentData['department_name'] ?? '');
+        }
+
+        mysqli_stmt_close($departmentStmt);
+    }
+}
+
+// Step C: Fallback sa Session kung walang mahanap sa DB
+if (empty($headDepartment)) {
+    $headDepartment = trim($_SESSION['department'] ?? '');
+}
+
+// I-update ang session para aligned sa lahat ng pages
+$_SESSION['department'] = $headDepartment;
+
+
 /* ------------------------------------------------------------
-   Employees list — everyone in the head's department
+   2. EMPLOYEES LIST — All employees belonging to head's department
    ------------------------------------------------------------ */
 $employees = [];
 
-$employeeStmt = mysqli_prepare(
-    $conn,
-    "SELECT id, employee_id, firstname, lastname, department, position, employment_status
-     FROM employees
-     WHERE LOWER(department) = LOWER(?)
-     ORDER BY firstname ASC, lastname ASC"
-);
+if (!empty($headDepartment)) {
+    $employeeStmt = mysqli_prepare(
+        $conn,
+        "SELECT id, employee_id, firstname, lastname, department, position, employment_status, email, phone
+         FROM employees
+         WHERE LOWER(TRIM(department)) = LOWER(TRIM(?))
+         ORDER BY firstname ASC, lastname ASC"
+    );
 
-if ($employeeStmt) {
-    mysqli_stmt_bind_param($employeeStmt, "s", $headDepartment);
-    mysqli_stmt_execute($employeeStmt);
-    $employeeResult = mysqli_stmt_get_result($employeeStmt);
+    if ($employeeStmt) {
+        mysqli_stmt_bind_param($employeeStmt, "s", $headDepartment);
+        mysqli_stmt_execute($employeeStmt);
+        $employeeResult = mysqli_stmt_get_result($employeeStmt);
 
-    if ($employeeResult) {
-        while ($row = mysqli_fetch_assoc($employeeResult)) {
-            $employees[] = $row;
-        }
-    }
-
-    mysqli_stmt_close($employeeStmt);
-}
-
-/* ------------------------------------------------------------
-   Attendance — for the selected date (defaults to today)
-   Uses LEFT JOIN so employees with no record still show up,
-   and get marked Absent below.
-   ------------------------------------------------------------ */
-$selectedAttendanceDate = $_GET['attendance_date'] ?? date('Y-m-d');
-$attendanceRecords      = [];
-
-$attendanceStmt = mysqli_prepare(
-    $conn,
-    "SELECT
-        employees.id AS employee_id,
-        employees.employee_id AS employee_code,
-        employees.firstname,
-        employees.lastname,
-        employees.department,
-        attendance.attendance_date,
-        attendance.time_in,
-        attendance.time_out,
-        attendance.status
-     FROM employees
-     LEFT JOIN attendance
-        ON attendance.employee_id = employees.id
-        AND attendance.attendance_date = ?
-     WHERE LOWER(employees.department) = LOWER(?)
-     ORDER BY employees.firstname ASC, employees.lastname ASC"
-);
-
-if ($attendanceStmt) {
-    mysqli_stmt_bind_param($attendanceStmt, "ss", $selectedAttendanceDate, $headDepartment);
-    mysqli_stmt_execute($attendanceStmt);
-    $attendanceResult = mysqli_stmt_get_result($attendanceStmt);
-
-    if ($attendanceResult) {
-        while ($row = mysqli_fetch_assoc($attendanceResult)) {
-
-            // No attendance row for this date = employee didn't clock in = Absent
-            if (empty($row['attendance_date'])) {
-                $row['attendance_date'] = $selectedAttendanceDate;
-                $row['status']          = 'Absent';
-            } elseif (empty($row['status'])) {
-                // Has a record but no status set yet
-                $row['status'] = 'Pending';
+        if ($employeeResult) {
+            while ($row = mysqli_fetch_assoc($employeeResult)) {
+                $employees[] = $row;
             }
-
-            $attendanceRecords[] = $row;
         }
+        mysqli_stmt_close($employeeStmt);
     }
-
-    mysqli_stmt_close($attendanceStmt);
 }
 
+
 /* ------------------------------------------------------------
-   Leave requests submitted by employees in this department
+   3. ATTENDANCE — Filtered by department and selected date
+   ------------------------------------------------------------ */
+$inputDate = $_GET['attendance_date'] ?? '';
+if (!empty($inputDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $inputDate)) {
+    $selectedAttendanceDate = $inputDate;
+} else {
+    $selectedAttendanceDate = date('Y-m-d');
+}
+
+$attendanceRecords = [];
+$today = date('Y-m-d');
+
+if (!empty($headDepartment)) {
+    $attendanceStmt = mysqli_prepare(
+        $conn,
+        "SELECT
+            employees.id AS employee_id,
+            employees.employee_id AS employee_code,
+            employees.firstname,
+            employees.lastname,
+            employees.department,
+            attendance.attendance_date,
+            attendance.time_in,
+            attendance.time_out,
+            attendance.status
+         FROM employees
+         LEFT JOIN attendance
+            ON attendance.employee_id = employees.id
+            AND attendance.attendance_date = ?
+         WHERE LOWER(TRIM(employees.department)) = LOWER(TRIM(?))
+         ORDER BY employees.firstname ASC, employees.lastname ASC"
+    );
+
+    if ($attendanceStmt) {
+        mysqli_stmt_bind_param($attendanceStmt, "ss", $selectedAttendanceDate, $headDepartment);
+        mysqli_stmt_execute($attendanceStmt);
+        $attendanceResult = mysqli_stmt_get_result($attendanceStmt);
+
+        if ($attendanceResult) {
+            while ($row = mysqli_fetch_assoc($attendanceResult)) {
+                if (empty($row['attendance_date'])) {
+                    $row['attendance_date'] = $selectedAttendanceDate;
+                    if ($selectedAttendanceDate > $today) {
+                        $row['status'] = 'No Record';
+                    } else {
+                        $row['status'] = 'Absent';
+                    }
+                } elseif (empty($row['status'])) {
+                    $row['status'] = 'Pending';
+                }
+
+                $attendanceRecords[] = $row;
+            }
+        }
+
+        mysqli_stmt_close($attendanceStmt);
+    }
+}
+
+
+/* ------------------------------------------------------------
+   4. LEAVE REQUESTS — Filtered by head's department
    ------------------------------------------------------------ */
 $leaveRecords = [];
 
-$leaveStmt = mysqli_prepare(
-    $conn,
-    "SELECT
-        leave_requests.id,
-        leave_requests.employee_id,
-        leave_requests.leave_type,
-        leave_requests.start_date,
-        leave_requests.end_date,
-        leave_requests.status,
-        employees.employee_id AS employee_code,
-        employees.firstname,
-        employees.lastname,
-        employees.department
-     FROM leave_requests
-     INNER JOIN employees ON employees.id = leave_requests.employee_id
-     WHERE LOWER(employees.department) = LOWER(?)
-     ORDER BY leave_requests.start_date DESC"
-);
+if (!empty($headDepartment)) {
+    $leaveStmt = mysqli_prepare(
+        $conn,
+        "SELECT
+            leave_requests.id,
+            leave_requests.employee_id,
+            leave_requests.leave_type,
+            leave_requests.start_date,
+            leave_requests.end_date,
+            leave_requests.status,
+            leave_requests.reason,
+            employees.employee_id AS employee_code,
+            employees.firstname,
+            employees.lastname,
+            employees.department
+         FROM leave_requests
+         INNER JOIN employees ON employees.id = leave_requests.employee_id
+         WHERE LOWER(TRIM(employees.department)) = LOWER(TRIM(?))
+         ORDER BY leave_requests.start_date DESC"
+    );
 
-if ($leaveStmt) {
-    mysqli_stmt_bind_param($leaveStmt, "s", $headDepartment);
-    mysqli_stmt_execute($leaveStmt);
-    $leaveResult = mysqli_stmt_get_result($leaveStmt);
+    if ($leaveStmt) {
+        mysqli_stmt_bind_param($leaveStmt, "s", $headDepartment);
+        mysqli_stmt_execute($leaveStmt);
+        $leaveResult = mysqli_stmt_get_result($leaveStmt);
 
-    if ($leaveResult) {
-        while ($row = mysqli_fetch_assoc($leaveResult)) {
-            $leaveRecords[] = $row;
+        if ($leaveResult) {
+            while ($row = mysqli_fetch_assoc($leaveResult)) {
+                $leaveRecords[] = $row;
+            }
         }
-    }
 
-    mysqli_stmt_close($leaveStmt);
+        mysqli_stmt_close($leaveStmt);
+    }
 }
 
+
 /* ------------------------------------------------------------
-   Schedules — filtered to one date if given via ?schedule_date=,
-   otherwise every schedule for the department is returned.
+   5. SCHEDULES — Filtered by head's department (and optional date)
    ------------------------------------------------------------ */
 $scheduleRecords      = [];
 $selectedScheduleDate = $_GET['schedule_date'] ?? '';
 
-// Shared SELECT used by both branches below (with/without a date filter)
-$scheduleBaseSql = "SELECT
-        schedules.id,
-        schedules.employee_id,
-        schedules.schedule_date,
-        schedules.time_in,
-        schedules.time_out,
-        schedules.break_start,
-        schedules.break_end,
-        schedules.created_at,
-        employees.employee_id AS employee_code,
-        employees.firstname,
-        employees.lastname,
-        employees.department,
-        employees.position
-     FROM schedules
-     INNER JOIN employees ON employees.id = schedules.employee_id
-     WHERE LOWER(employees.department) = LOWER(?)";
+if (!empty($headDepartment)) {
+    $scheduleBaseSql = "SELECT
+            schedules.id,
+            schedules.employee_id,
+            schedules.schedule_date,
+            schedules.time_in,
+            schedules.time_out,
+            schedules.break_start,
+            schedules.break_end,
+            schedules.created_at,
+            employees.employee_id AS employee_code,
+            employees.firstname,
+            employees.lastname,
+            employees.department,
+            employees.position
+         FROM schedules
+         INNER JOIN employees ON employees.id = schedules.employee_id
+         WHERE LOWER(TRIM(employees.department)) = LOWER(TRIM(?))";
 
-if (!empty($selectedScheduleDate)) {
+    if (!empty($selectedScheduleDate)) {
+        $scheduleStmt = mysqli_prepare(
+            $conn,
+            $scheduleBaseSql . " AND schedules.schedule_date = ? ORDER BY employees.firstname ASC, employees.lastname ASC"
+        );
 
-    // A specific date was chosen — filter to just that date
-    $scheduleStmt = mysqli_prepare(
-        $conn,
-        $scheduleBaseSql . "
-         AND schedules.schedule_date = ?
-         ORDER BY employees.firstname ASC, employees.lastname ASC"
-    );
+        if ($scheduleStmt) {
+            mysqli_stmt_bind_param($scheduleStmt, "ss", $headDepartment, $selectedScheduleDate);
+            mysqli_stmt_execute($scheduleStmt);
+            $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
 
-    if ($scheduleStmt) {
-        mysqli_stmt_bind_param($scheduleStmt, "ss", $headDepartment, $selectedScheduleDate);
-        mysqli_stmt_execute($scheduleStmt);
-        $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
-
-        if ($scheduleResult) {
-            while ($row = mysqli_fetch_assoc($scheduleResult)) {
-                $scheduleRecords[] = $row;
+            if ($scheduleResult) {
+                while ($row = mysqli_fetch_assoc($scheduleResult)) {
+                    $scheduleRecords[] = $row;
+                }
             }
+            mysqli_stmt_close($scheduleStmt);
         }
+    } else {
+        $scheduleStmt = mysqli_prepare(
+            $conn,
+            $scheduleBaseSql . " ORDER BY schedules.schedule_date DESC, employees.firstname ASC, employees.lastname ASC"
+        );
 
-        mysqli_stmt_close($scheduleStmt);
-    }
+        if ($scheduleStmt) {
+            mysqli_stmt_bind_param($scheduleStmt, "s", $headDepartment);
+            mysqli_stmt_execute($scheduleStmt);
+            $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
 
-} else {
-
-    // No date chosen — show every schedule, most recent first
-    $scheduleStmt = mysqli_prepare(
-        $conn,
-        $scheduleBaseSql . "
-         ORDER BY schedules.schedule_date DESC, employees.firstname ASC, employees.lastname ASC"
-    );
-
-    if ($scheduleStmt) {
-        mysqli_stmt_bind_param($scheduleStmt, "s", $headDepartment);
-        mysqli_stmt_execute($scheduleStmt);
-        $scheduleResult = mysqli_stmt_get_result($scheduleStmt);
-
-        if ($scheduleResult) {
-            while ($row = mysqli_fetch_assoc($scheduleResult)) {
-                $scheduleRecords[] = $row;
+            if ($scheduleResult) {
+                while ($row = mysqli_fetch_assoc($scheduleResult)) {
+                    $scheduleRecords[] = $row;
+                }
             }
+            mysqli_stmt_close($scheduleStmt);
         }
-
-        mysqli_stmt_close($scheduleStmt);
     }
-}
-
+} 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -266,15 +304,14 @@ if (!empty($selectedScheduleDate)) {
                     <p><?php echo htmlspecialchars($headDepartment); ?> Department</p>
                 </div>
 
-                <!-- Tab-style cards: click one to switch which table shows below -->
+                <!-- Tab-style cards -->
                 <div class="management-panel">
                     <div class="management-panel-description">
                         Select a section below to manage your department.
                     </div>
 
                     <div class="management-cards">
-
-                        <button type="button" class="management-card" data-section="employees">
+                        <button type="button" class="management-card active" data-section="employees">
                             <img src="images/users.png" alt="">
                             <span>Employees</span>
                         </button>
@@ -293,14 +330,13 @@ if (!empty($selectedScheduleDate)) {
                             <img src="images/calendar-month.png" alt="">
                             <span>Schedule</span>
                         </button>
-
                     </div>
                 </div>
 
                 <div class="management-content">
 
                     <!-- ============ EMPLOYEES TABLE ============ -->
-                    <section class="management-section" id="section-employees">
+                    <section class="management-section active" id="section-employees">
                         <div class="management-section-header">
                             <div>
                                 <h2>Employees</h2>
@@ -329,7 +365,6 @@ if (!empty($selectedScheduleDate)) {
                                                 <td><?php echo htmlspecialchars($employee['department'] ?? '--'); ?></td>
                                                 <td>
                                                     <?php
-                                                    // Turn "employment_status" into a CSS-safe class, e.g. "On Leave" -> "on-leave"
                                                     $employeeStatus = $employee['employment_status'] ?? 'Unknown';
                                                     $statusClass    = strtolower(str_replace(' ', '-', $employeeStatus));
                                                     ?>
@@ -341,13 +376,7 @@ if (!empty($selectedScheduleDate)) {
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="5" class="empty-row">
-                                                <?php if (!empty($selectedScheduleDate)): ?>
-                                                    No schedules found for <?php echo date('F d, Y', strtotime($selectedScheduleDate)); ?>.
-                                                <?php else: ?>
-                                                    No schedules found.
-                                                <?php endif; ?>
-                                            </td>
+                                            <td colspan="5" class="empty-row">No employees found in this department.</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -363,14 +392,11 @@ if (!empty($selectedScheduleDate)) {
                                 <p>Attendance records of your department</p>
                             </div>
 
-                            <!-- ATTENDANCE DATE FILTER -->
-
                             <form method="GET" class="schedule-date-filter">
                                 <label for="attendance_date">Date</label>
-                                <input type="date" id="attendance_date" name="attendance_date" value="<?php echo htmlspecialchars($selectedAttendanceDate); ?>"
-                                    onchange="this.form.submit()">
+                                <input type="date" id="attendance_date" name="attendance_date" value="<?php echo htmlspecialchars($selectedAttendanceDate); ?>" onchange="this.form.submit()">
                             </form>
-                        </div>
+                        </div> 
 
                         <div class="management-table-wrapper">
                             <table class="management-table">
@@ -412,7 +438,7 @@ if (!empty($selectedScheduleDate)) {
                                                 <td>
                                                     <?php
                                                     $attendanceStatus = $attendance['status'] ?? 'Pending';
-                                                    $attendanceClass  = strtolower($attendanceStatus);
+                                                    $attendanceClass  = strtolower(str_replace(' ', '-', $attendanceStatus));
                                                     ?>
                                                     <span class="status-badge status-<?php echo htmlspecialchars($attendanceClass); ?>">
                                                         <?php echo htmlspecialchars($attendanceStatus); ?>
@@ -473,7 +499,7 @@ if (!empty($selectedScheduleDate)) {
                                                 <td>
                                                     <?php
                                                     $leaveStatus = $leave['status'] ?? 'Pending';
-                                                    $leaveClass  = strtolower($leaveStatus);
+                                                    $leaveClass  = strtolower(str_replace(' ', '-', $leaveStatus));
                                                     ?>
                                                     <span class="status-badge status-<?php echo htmlspecialchars($leaveClass); ?>">
                                                         <?php echo htmlspecialchars($leaveStatus); ?>
@@ -499,7 +525,6 @@ if (!empty($selectedScheduleDate)) {
                                 <p>Employee schedules of your department</p>
                             </div>
 
-                            <!-- Filters the table above by a single date; auto-submits on change -->
                             <form method="GET" class="schedule-date-filter">
                                 <label for="schedule_date">Date</label>
                                 <input
@@ -554,7 +579,13 @@ if (!empty($selectedScheduleDate)) {
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="5" class="empty-row">No schedules found.</td>
+                                            <td colspan="5" class="empty-row">
+                                                <?php if (!empty($selectedScheduleDate)): ?>
+                                                    No schedules found for <?php echo date('F d, Y', strtotime($selectedScheduleDate)); ?>.
+                                                <?php else: ?>
+                                                    No schedules found.
+                                                <?php endif; ?>
+                                            </td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -570,51 +601,45 @@ if (!empty($selectedScheduleDate)) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-    const cards    = document.querySelectorAll('.management-card');
+    const cards = document.querySelectorAll('.management-card');
     const sections = document.querySelectorAll('.management-section');
 
-    // Switches which tab-card is highlighted and which table section is shown
     function showSection(sectionName) {
         cards.forEach(function (card) {
-            card.classList.remove('active');
+            if (card.getAttribute('data-section') === sectionName) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
         });
 
         sections.forEach(function (section) {
-            section.classList.remove('active');
+            if (section.id === 'section-' + sectionName) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
         });
-
-        const selectedCard    = document.querySelector('.management-card[data-section="' + sectionName + '"]');
-        const selectedSection = document.getElementById('section-' + sectionName);
-
-        if (selectedCard) {
-            selectedCard.classList.add('active');
-        }
-
-        if (selectedSection) {
-            selectedSection.classList.add('active');
-        }
     }
 
-    // Clicking a tab-card switches to its section
+    // Auto-open attendance or schedule tab if filter was used
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('attendance_date')) {
+        showSection('attendance');
+    } else if (urlParams.has('schedule_date')) {
+        showSection('schedule');
+    } else {
+        showSection('employees');
+    }
+
+    // Add click listeners to section cards
     cards.forEach(function (card) {
         card.addEventListener('click', function () {
-            showSection(this.getAttribute('data-section'));
+            const section = this.getAttribute('data-section');
+            showSection(section);
         });
     });
-
-    // If the page was reloaded because of the schedule date filter
-    // (i.e. ?schedule_date=... is in the URL), reopen the Schedule tab
-    // instead of defaulting back to Employees.
-    const urlParams             = new URLSearchParams(window.location.search);
-    const selectedScheduleDate  = urlParams.get('schedule_date');
-
-    if (selectedScheduleDate) {
-        showSection('schedule');
-    }
-
 });
 </script>
-
 </body>
 </html>

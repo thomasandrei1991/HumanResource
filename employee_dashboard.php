@@ -39,16 +39,19 @@
         "SELECT time_in, time_out, status
         FROM attendance
         WHERE employee_id = ?
-        AND attendance_date = CURDATE()
+        AND DATE(attendance_date) = CURDATE()
         LIMIT 1"
     );
 
-    mysqli_stmt_bind_param($attendanceQuery, "i", $employeeId);
-    mysqli_stmt_execute($attendanceQuery);
-    $attendanceResult = mysqli_stmt_get_result($attendanceQuery);
+    if ($attendanceQuery) {
+        mysqli_stmt_bind_param($attendanceQuery, "i", $employeeId);
+        mysqli_stmt_execute($attendanceQuery);
+        $attendanceResult = mysqli_stmt_get_result($attendanceQuery);
 
-    if (mysqli_num_rows($attendanceResult) > 0) {
-        $todayAttendance = mysqli_fetch_assoc($attendanceResult);
+        if (mysqli_num_rows($attendanceResult) > 0) {
+            $todayAttendance = mysqli_fetch_assoc($attendanceResult);
+        }
+        mysqli_stmt_close($attendanceQuery);
     }
 
 ?>
@@ -95,7 +98,7 @@
                             🕐 Time Out
                         </button>
 
-                    <?php elseif (empty($todayAttendance['time_out'])): ?>
+                    <?php elseif (empty($todayAttendance['time_out']) || $todayAttendance['time_out'] === '00:00:00'): ?>
 
                         <!-- ALREADY TIMED IN -->
                         <button type="button" class="primary-btn" disabled>
@@ -126,7 +129,7 @@
                         <?php if (!$todayAttendance): ?>
                             <span>Not yet timed in</span>
                         <?php else: ?>
-                            <span><?php echo htmlspecialchars($todayAttendance['status']); ?></span>
+                            <span><?php echo htmlspecialchars($todayAttendance['status'] ?? 'Pending'); ?></span>
                         <?php endif; ?>
                     </p>
 
@@ -144,7 +147,7 @@
                     <p>
                         <strong>Time Out:</strong>
                         <?php
-                            if ($todayAttendance && !empty($todayAttendance['time_out'])) {
+                            if ($todayAttendance && !empty($todayAttendance['time_out']) && $todayAttendance['time_out'] !== '00:00:00') {
                                 echo date('h:i A', strtotime($todayAttendance['time_out']));
                             } else {
                                 echo '--';
@@ -166,7 +169,6 @@
             </div>
 
             <!-- ========== ATTENDANCE HISTORY ========== -->
-            <!--
             <h2>My Attendance History</h2>
             <div class="employee-dashboard-panel">
                 <div class="table-scroll">
@@ -181,19 +183,19 @@
                         </thead>
                         <tbody>
                             <?php
-                                // GET EMPLOYEE ATTENDANCE HISTORY
                                 $historyQuery = mysqli_prepare($conn, "SELECT attendance_date, time_in, time_out, status
                                     FROM attendance
                                     WHERE employee_id = ?
-                                    ORDER BY attendance_date DESC"
+                                    ORDER BY attendance_date DESC, id DESC"
                                 );
 
-                                mysqli_stmt_bind_param($historyQuery, "i", $employeeId);
-                                mysqli_stmt_execute($historyQuery);
-                                $historyResult = mysqli_stmt_get_result($historyQuery);
+                                if ($historyQuery):
+                                    mysqli_stmt_bind_param($historyQuery, "i", $employeeId);
+                                    mysqli_stmt_execute($historyQuery);
+                                    $historyResult = mysqli_stmt_get_result($historyQuery);
 
-                                if (mysqli_num_rows($historyResult) > 0):
-                                    while ($attendance = mysqli_fetch_assoc($historyResult)):
+                                    if (mysqli_num_rows($historyResult) > 0):
+                                        while ($attendance = mysqli_fetch_assoc($historyResult)):
                             ?>
                                 <tr>
                                     <td><?php echo date('M d, Y', strtotime($attendance['attendance_date'])); ?></td>
@@ -208,7 +210,7 @@
 
                                     <td>
                                         <?php
-                                            echo !empty($attendance['time_out'])
+                                            echo (!empty($attendance['time_out']) && $attendance['time_out'] !== '00:00:00')
                                                 ? date('h:i A', strtotime($attendance['time_out']))
                                                 : '--';
                                         ?>
@@ -216,17 +218,14 @@
 
                                     <td>
                                         <?php
-                                            $status = $attendance['status'];
+                                            $status = $attendance['status'] ?? 'Pending';
 
-                                            switch ($status) {
-                                                case 'Present':
+                                            switch (strtolower($status)) {
+                                                case 'present':
                                                     $statusClass = 'present';
                                                     break;
-                                                case 'Absent':
+                                                case 'absent':
                                                     $statusClass = 'absent';
-                                                    break;
-                                                case 'Pending':
-                                                    $statusClass = 'pending';
                                                     break;
                                                 default:
                                                     $statusClass = 'pending';
@@ -239,20 +238,23 @@
                                     </td>
                                 </tr>
                             <?php
-                                    endwhile;
-                                else:
+                                        endwhile;
+                                    else:
                             ?>
                                 <tr>
                                     <td colspan="4" style="text-align: center;">
                                         No attendance records found.
                                     </td>
                                 </tr>
-                            <?php endif; ?>
+                            <?php 
+                                    endif;
+                                    mysqli_stmt_close($historyQuery);
+                                endif;
+                            ?>
                         </tbody>
                     </table>
                 </div>
-            </div>
-            -->                 
+            </div>          
         </div>
     </main>
 </div>
